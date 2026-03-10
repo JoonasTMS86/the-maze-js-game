@@ -1,13 +1,23 @@
-var imgData;
-var screenWidth  = 1910;
-var screenHeight = 909;
-var goingup      = false;
-var goingdown    = false;
-var goingleft    = false;
-var goingright   = false;
-var spacePressed = false;
-var canvas       = document.getElementById("gfxBuffer");
-var ctx          = canvas.getContext("2d");
+var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata;
+var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
+var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
+var goingup                                  = false;
+var goingdown                                = false;
+var goingleft                                = false;
+var goingright                               = false;
+var spacePressed                             = false;
+var mainGfxBuffer                            = document.getElementById("mainGfxBuffer");
+var mainGfxBufferCtx                         = mainGfxBuffer.getContext("2d");
+var doubleBuffer                             = document.getElementById("doubleBuffer");
+var doubleBufferCtx                          = doubleBuffer.getContext("2d");
+var gfxScaledToCurrentDeviceResolutionBuffer = document.getElementById("gfxScaledToCurrentDeviceResolutionBuffer");
+var gfxScaledToCurrentDeviceResolutionCtx    = gfxScaledToCurrentDeviceResolutionBuffer.getContext("2d");
+var gfxScaledToCurrentDeviceResolutionSdata  = gfxScaledToCurrentDeviceResolutionCtx.createImageData(1910, 909);
+var testpicSprite                            = document.getElementById("testpic");
+var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
+var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
+var gfx_lavaSdata                            = gfx_lavaCtx.createImageData(19, 19);
+var gfx_lavaSprite                           = document.getElementById("gfx_lava");
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -17,8 +27,8 @@ let Application = PIXI.Application,
 	Sprite = PIXI.Sprite;
 let app = new Application(
 {
-	width: screenWidth, 
-	height: screenHeight,
+	width: fullSizeWidth, 
+	height: fullSizeHeight,
 	antialiasing: false, 
 	transparent: false, 
 	resolution: 1,
@@ -95,24 +105,60 @@ function gameLoop(delta)
 	state(delta);
 }
 
-async function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic)
+function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG, keyB)
 {
 	var sizeofit = 4 * givenbuffer.width * givenbuffer.height;
 	for(var tpPos = 0; tpPos < sizeofit; tpPos += 4)
 	{
-		if(givenpic.data[tpPos] == 255 && givenpic.data[tpPos+1] == 255 && givenpic.data[tpPos+2] == 255) givenpic.data[tpPos+3] = 0;
+		if(givenpic.data[tpPos + 0] == keyR && givenpic.data[tpPos + 1] == keyG && givenpic.data[tpPos + 2] == keyB) {
+			givenpic.data[tpPos + 3] = 0;
+		}
 	}
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
 window.onload = function() {
-	imgData = ctx.createImageData(1910, 909);
-	ctx.putImageData(imgData, 0, 0);
+	// Detect the resolution of the user's device in order to scale images correctly.
+	screen_width  = window.screen.availWidth;
+	screen_height = window.screen.availHeight;
+
+	console.log("SCREEN DIMENSIONS: " + screen_width + " x " + screen_height);
+
+	var gfx1 = document.getElementById("mainGfxBuffer");
+	var gfx2 = document.getElementById("doubleBuffer");
+	deviceWidth = screen_width - 10;
+	deviceHeight = screen_height - 137;
+	// Resolutions:
+	// * 1920 x 1080 (1920 x 1046) (1910 x 909)
+	// * 1366 x 768 (1366 x 736) (1356 x 599)
+	// * 412 x 915 (412 x 915) (402 x 778) portrait, 915 x 412 (915 x 412) (905 x 275) landscape
+	deviceWidth = 1356;
+	deviceHeight = 599;
+
+	gfx1.width = deviceWidth;
+	gfx1.height = deviceHeight;
+	gfx2.width = deviceWidth;
+	gfx2.height = deviceHeight;
+
+	mainGfxBufferSdata = mainGfxBufferCtx.createImageData(fullSizeWidth, fullSizeHeight);
+	mainGfxBufferCtx.putImageData(mainGfxBufferSdata, 0, 0);
+	mainGfxBufferSdata = mainGfxBufferCtx.getImageData(0, 0, mainGfxBuffer.width, mainGfxBuffer.height);
+
+	doubleBufferSdata = doubleBufferCtx.createImageData(fullSizeWidth, fullSizeHeight);
+	doubleBufferCtx.putImageData(doubleBufferSdata, 0, 0);
+	doubleBufferSdata = doubleBufferCtx.getImageData(0, 0, doubleBuffer.width, doubleBuffer.height);
+
+	gfx_lavaCtx.drawImage(gfx_lavaSprite, 0, 0);
 };
 
 function play(delta)
 {
-	if(imgData != null) ctx.putImageData(imgData, 0, 0);
+	if(doubleBufferSdata != null) {
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(testpicSprite, 0, 0);
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_lavaBuffer, 0, 0);
+		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+	}
 }
 
 function keyboard(keyCode)
