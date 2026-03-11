@@ -6,6 +6,7 @@ var goingdown                                = false;
 var goingleft                                = false;
 var goingright                               = false;
 var spacePressed                             = false;
+var mustReleaseKey                           = false;
 var mainGfxBuffer                            = document.getElementById("mainGfxBuffer");
 var mainGfxBufferCtx                         = mainGfxBuffer.getContext("2d");
 var doubleBuffer                             = document.getElementById("doubleBuffer");
@@ -13,11 +14,28 @@ var doubleBufferCtx                          = doubleBuffer.getContext("2d");
 var gfxScaledToCurrentDeviceResolutionBuffer = document.getElementById("gfxScaledToCurrentDeviceResolutionBuffer");
 var gfxScaledToCurrentDeviceResolutionCtx    = gfxScaledToCurrentDeviceResolutionBuffer.getContext("2d");
 var gfxScaledToCurrentDeviceResolutionSdata  = gfxScaledToCurrentDeviceResolutionCtx.createImageData(1910, 909);
-var testpicSprite                            = document.getElementById("testpic");
+var bgInItsCurrentStateBuffer                = document.getElementById("bgInItsCurrentStateBuffer");
+var bgInItsCurrentStateCtx                   = bgInItsCurrentStateBuffer.getContext("2d");
+var bgInItsCurrentStateSdata                 = bgInItsCurrentStateCtx.createImageData(1910, 909);
+var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
 var gfx_lavaSdata                            = gfx_lavaCtx.createImageData(19, 19);
 var gfx_lavaSprite                           = document.getElementById("gfx_lava");
+var gfx_protagonistBuffer                    = document.getElementById("gfx_protagonistBuffer");
+var gfx_protagonistCtx                       = gfx_protagonistBuffer.getContext("2d");
+var gfx_protagonistSdata                     = gfx_protagonistCtx.createImageData(19, 19);
+var gfx_protagonistSprite                    = document.getElementById("gfx_protagonist");
+var gfx_fontBuffer                           = document.getElementById("gfx_fontBuffer");
+var gfx_fontCtx                              = gfx_fontBuffer.getContext("2d");
+var gfx_fontSdata                            = gfx_fontCtx.createImageData(1216, 19);
+var gfx_fontSprite                           = document.getElementById("gfx_font");
+var playerX                                  = 0; // TILE X pos of player
+var playerY                                  = 0; // TILE Y pos of player
+const tileWidth                              = 19;
+const tileHeight                             = 19;
+const widthOfLevelInTiles                    = 100;
+const heightOfLevelInTiles                   = 47;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -132,8 +150,6 @@ window.onload = function() {
 	// * 1920 x 1080 (1920 x 1046) (1910 x 909)
 	// * 1366 x 768 (1366 x 736) (1356 x 599)
 	// * 412 x 915 (412 x 915) (402 x 778) portrait, 915 x 412 (915 x 412) (905 x 275) landscape
-	deviceWidth = 1356;
-	deviceHeight = 599;
 
 	gfx1.width = deviceWidth;
 	gfx1.height = deviceHeight;
@@ -149,15 +165,61 @@ window.onload = function() {
 	doubleBufferSdata = doubleBufferCtx.getImageData(0, 0, doubleBuffer.width, doubleBuffer.height);
 
 	gfx_lavaCtx.drawImage(gfx_lavaSprite, 0, 0);
+	gfx_protagonistCtx.drawImage(gfx_protagonistSprite, 0, 0);
+
+	gfx_fontCtx.drawImage(gfx_fontSprite, 0, 0);
+	gfx_fontSdata = gfx_fontCtx.getImageData(0, 0, gfx_fontBuffer.width, gfx_fontBuffer.height);
+	doSpriteTransparency(gfx_fontCtx, gfx_fontBuffer, gfx_fontSdata, 146, 41, 0); // 0x92 0x29 0x00
+
+	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
+	bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, 627, 0, 19, 19, 50, 50, 19, 19);
 };
 
 function play(delta)
 {
 	if(doubleBufferSdata != null) {
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(testpicSprite, 0, 0);
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_lavaBuffer, 0, 0);
+		/*
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_bgSprite, 0, 0);
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_fontBuffer, 627, 0, 19, 19, 50, 50, 19, 19);
+
 		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
 		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+		*/
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+	}
+	if(!mustReleaseKey) {
+		if(goingup) {
+			mustReleaseKey = true;
+			if(playerY > 0) {
+				playerY--;
+			}
+		}
+		if(goingdown) {
+			mustReleaseKey = true;
+			if(playerY < (heightOfLevelInTiles - 1)) {
+				playerY++;
+			}
+		}
+		if(goingleft) {
+			mustReleaseKey = true;
+			if(playerX > 0) {
+				playerX--;
+			}
+		}
+		if(goingright) {
+			mustReleaseKey = true;
+			if(playerX < (widthOfLevelInTiles - 1)) {
+				playerX++;
+			}
+		}
+	}
+	if(!goingup && !goingdown && !goingleft && !goingright && !spacePressed) {
+		mustReleaseKey = false;
 	}
 }
 
