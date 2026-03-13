@@ -203,15 +203,6 @@ window.onload = function() {
 function play(delta)
 {
 	if(doubleBufferSdata != null) {
-		/*
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_bgSprite, 0, 0);
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
-
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_fontBuffer, 627, 0, 19, 19, 50, 50, 19, 19);
-
-		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
-		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
-		*/
 		gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
