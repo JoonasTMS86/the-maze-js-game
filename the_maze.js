@@ -1,4 +1,4 @@
-var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata;
+var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata, sTileWidth, sTileHeight;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var goingup                                  = false;
@@ -32,6 +32,8 @@ var gfx_fontSdata                            = gfx_fontCtx.createImageData(1216,
 var gfx_fontSprite                           = document.getElementById("gfx_font");
 var playerX                                  = 0; // TILE X pos of player
 var playerY                                  = 0; // TILE Y pos of player
+const letterWidth                            = 19;
+const letterHeight                           = 19;
 const tileWidth                              = 19;
 const tileHeight                             = 19;
 const widthOfLevelInTiles                    = 100;
@@ -135,6 +137,24 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
+function clickGameScreen(event) {
+	var xfactor = 1920 / deviceWidth;
+	var yfactor = 909 / deviceHeight;
+	console.log("clicked x,y: " + event.offsetX + "," + event.offsetY);
+	var x = Math.floor((event.offsetX * xfactor) / 19);
+	var y = Math.floor((event.offsetY * yfactor) / 19);
+	console.log("RESULTING TILE X,TILE Y: " + x + "," + y);
+	bgInItsCurrentStateCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
+}
+
+function putText(textX, textY, text) {
+	for(var pos = 0; pos < text.length; pos++) {
+		var letter = text.charCodeAt(pos) - 32;
+		bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+		textX += letterWidth;
+	}
+}
+
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
 	screen_width  = window.screen.availWidth;
@@ -172,7 +192,12 @@ window.onload = function() {
 	doSpriteTransparency(gfx_fontCtx, gfx_fontBuffer, gfx_fontSdata, 146, 41, 0); // 0x92 0x29 0x00
 
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
-	bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, 627, 0, 19, 19, 50, 50, 19, 19);
+	putText(50, 50, "CHOOSE TILE");
+
+	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
+	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
+	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
+
 };
 
 function play(delta)
