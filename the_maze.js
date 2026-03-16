@@ -228,22 +228,22 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	var posW = (y * widthOfLevelInTiles) + x - 1;
 	if(gameBoard[posN] == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
+		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
 		gameBoard[posN] = 0;
 	}
 	if(gameBoard[posS] == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
+		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
 		gameBoard[posS] = 0;
 	}
 	if(gameBoard[posE] == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
+		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
 		gameBoard[posE] = 0;
 	}
 	if(gameBoard[posW] == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
+		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
 		gameBoard[posW] = 0;
 	}
 	if(matches) {
