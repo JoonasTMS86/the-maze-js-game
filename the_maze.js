@@ -26,6 +26,7 @@ var key6Pressed                              = false;
 var key7Pressed                              = false;
 var key8Pressed                              = false;
 var key9Pressed                              = false;
+var sPressed                                 = false;
 var zPressed                                 = false;
 var xPressed                                 = false;
 var mustReleaseKey                           = false;
@@ -160,8 +161,15 @@ var playerY                                  = 0; // TILE Y pos of player
 var currentlySelectedTile                    = 1;
 var bombs                                    = 0; // Number of bombs in player's possession
 var keys                                     = 0; // Number of keys in player's possession
-var gameBoard                                = [];
-var gateOrButtonSettings                     = []; // Multi purpose array. When a tile has a gate in it, the array offset for that tile contains the ID of that gate. When a tile has a button in it, the array offset for that tile contains the properties of the button (which gates are affected by the button).
+/*
+ Level data: 
+ When a tile has a gate in it, the array offset for that tile contains the ID
+ of that gate. When a tile has a button in it, the array offset for that tile
+ contains the properties of the button (which gates are affected by the
+ button).
+*/
+var levelData                                = [];
+var gateOrButtonSettings                     = [];
 var optionWindow                             = false;
 var enteringInput                            = false;
 
@@ -204,6 +212,7 @@ function setup()
 	key7 = keyboard(55),
 	key8 = keyboard(56),
 	key9 = keyboard(57),
+	keys = keyboard(83),
 	keyx = keyboard(88),
 	keyz = keyboard(90);
 	// Key "Backspace".
@@ -214,6 +223,15 @@ function setup()
 	keyBackspace.release = () =>
 	{
 		keyBackspacePressed = false;
+	};
+	// Key "S".
+	keys.press = () =>
+	{
+		sPressed = true;
+	};
+	keys.release = () =>
+	{
+		sPressed = false;
 	};
 	// Key "0".
 	key0.press = () =>
@@ -410,29 +428,29 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	var posS = ((y + 1) * widthOfLevelInTiles) + x;
 	var posE = (y * widthOfLevelInTiles) + x + 1;
 	var posW = (y * widthOfLevelInTiles) + x - 1;
-	if(gameBoard[posN] == objectId) {
+	if(levelData[posN] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
-		gameBoard[posN] = 0;
+		levelData[posN] = 0;
 	}
-	if(gameBoard[posS] == objectId) {
+	if(levelData[posS] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
-		gameBoard[posS] = 0;
+		levelData[posS] = 0;
 	}
-	if(gameBoard[posE] == objectId) {
+	if(levelData[posE] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
-		gameBoard[posE] = 0;
+		levelData[posE] = 0;
 	}
-	if(gameBoard[posW] == objectId) {
+	if(levelData[posW] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
-		gameBoard[posW] = 0;
+		levelData[posW] = 0;
 	}
 	if(matches) {
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
-		gameBoard[origPos] = 0;
+		levelData[origPos] = 0;
 	}
 	else {
 		switch(objectId) {
@@ -460,7 +478,7 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 
 function putTile(tile, x, y) {
 	var gameBoardPos = (y * widthOfLevelInTiles) + x;
-	gameBoard[gameBoardPos] = tile;
+	levelData[gameBoardPos] = tile;
 
 	tile &= 0x7F;
 
@@ -599,13 +617,13 @@ function toggleGates(buttonPos) {
 	var x = 0;
 	var y = 0;
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-		if(gameBoard[pos] >= 20 && gameBoard[pos] <= 23) {
+		if(levelData[pos] >= 20 && levelData[pos] <= 23) {
 			var gateId = gateOrButtonSettings[pos * 295] + (gateOrButtonSettings[(pos * 295) + 1] * 256);
 			var arrayPos = Math.floor(gateId / 8);
 			var modulo = gateId % 8;
 			var bitValue = 128 >> modulo;
 			if((gateOrButtonSettings[buttonPos + arrayPos] & bitValue) != 0) {
-				var toggledGateValue = gameBoard[pos] ^ 2;
+				var toggledGateValue = levelData[pos] ^ 2;
 				putTile(toggledGateValue, x, y);
 			}
 		}
@@ -645,75 +663,75 @@ function canMove(x, y, direction) {
 			break;
 	}
 	var checkPos = (y * widthOfLevelInTiles) + x;
-	console.log("bumped into object id " + gameBoard[checkPos] + " at " + x + "," + y);
-	if((gameBoard[checkPos] & 0x7F) < 12) {
+	console.log("bumped into object id " + levelData[checkPos] + " at " + x + "," + y);
+	if((levelData[checkPos] & 0x7F) < 12) {
 		var tileUnderneath = 0;
-		if((gameBoard[checkPos] & 0x80) != 0) {
+		if((levelData[checkPos] & 0x80) != 0) {
 			tileUnderneath = 10;
 		}
 		// IDs of movable objects: 1,2,3,4,5,6,8,9
 		// Add 128 to the value if the object in question has a crate holder underneath it.
 		if(
-			(gameBoard[checkPos] & 0x7F) == 1 ||
-			(gameBoard[checkPos] & 0x7F) == 2 ||
-			(gameBoard[checkPos] & 0x7F) == 3 ||
-			(gameBoard[checkPos] & 0x7F) == 4 ||
-			(gameBoard[checkPos] & 0x7F) == 5 ||
-			(gameBoard[checkPos] & 0x7F) == 6 ||
-			(gameBoard[checkPos] & 0x7F) == 8 ||
-			(gameBoard[checkPos] & 0x7F) == 9
+			(levelData[checkPos] & 0x7F) == 1 ||
+			(levelData[checkPos] & 0x7F) == 2 ||
+			(levelData[checkPos] & 0x7F) == 3 ||
+			(levelData[checkPos] & 0x7F) == 4 ||
+			(levelData[checkPos] & 0x7F) == 5 ||
+			(levelData[checkPos] & 0x7F) == 6 ||
+			(levelData[checkPos] & 0x7F) == 8 ||
+			(levelData[checkPos] & 0x7F) == 9
 		) {
-			if((gameBoard[checkPos] & 0x7F) == 8 && gameBoard[newPosOfMovableObject] == 15) {
+			if((levelData[checkPos] & 0x7F) == 8 && levelData[newPosOfMovableObject] == 15) {
 				console.log("boulder dropped into lava");
 			}
-			else if(gameBoard[newPosOfMovableObject] != 0 && gameBoard[newPosOfMovableObject] != 10) {
+			else if(levelData[newPosOfMovableObject] != 0 && levelData[newPosOfMovableObject] != 10) {
 				return false;
 			}
 			var markerUnderneath = 0x0;
-			if(gameBoard[newPosOfMovableObject] == 10) {
+			if(levelData[newPosOfMovableObject] == 10) {
 				console.log("YES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				markerUnderneath = 0x80;
 			}
-			var tileToPut = (gameBoard[checkPos] & 0x7F) | markerUnderneath;
-			if(gameBoard[newPosOfMovableObject] == 15) {
+			var tileToPut = (levelData[checkPos] & 0x7F) | markerUnderneath;
+			if(levelData[newPosOfMovableObject] == 15) {
 				tileToPut = 0;
 			}
 			console.log("newX, newY, tileToPut = " + newX + ", " + newY + ", " + tileToPut);
 			putTile(tileUnderneath, x, y);
 			putTile(tileToPut, newX, newY);
 		}
-		else if((gameBoard[checkPos] & 0x7F) == 7) {
+		else if((levelData[checkPos] & 0x7F) == 7) {
 			bombs++;
 			console.log("bomb");
 			putTile(0, x, y);
 		}
-		else if((gameBoard[checkPos] & 0x7F) == 11) {
+		else if((levelData[checkPos] & 0x7F) == 11) {
 			keys++;
 			console.log("key");
 			putTile(0, x, y);
 		}
 		return true;
 	}
-	else if((gameBoard[checkPos] & 0x7F) == 12 && keys > 0) {
+	else if((levelData[checkPos] & 0x7F) == 12 && keys > 0) {
 		keys--;
 		console.log("lock unlocked");
 		putTile(0, x, y);
 		return true;
 	}
-	else if((gameBoard[checkPos] & 0x7F) == 13 && bombs > 0) {
+	else if((levelData[checkPos] & 0x7F) == 13 && bombs > 0) {
 		bombs--;
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
 	}
-	else if((gameBoard[checkPos] & 0x7F) >= 16 && (gameBoard[checkPos] & 0x7F) <= 19) {
+	else if((levelData[checkPos] & 0x7F) >= 16 && (levelData[checkPos] & 0x7F) <= 19) {
 		console.log("** PUSHED BUTTON AT X,Y POS " + x + "," + y + " **");
 		currentGateOrButtonSettingsArrayPos = ((y * widthOfLevelInTiles) + x) * 295;
 		toggleGates(currentGateOrButtonSettingsArrayPos);
 	}
-	else if((gameBoard[checkPos] & 0x7F) == 22) {
+	else if((levelData[checkPos] & 0x7F) == 22) {
 		return true;
 	}
-	else if((gameBoard[checkPos] & 0x7F) == 23) {
+	else if((levelData[checkPos] & 0x7F) == 23) {
 		return true;
 	}
 	return false;
@@ -723,7 +741,7 @@ function refreshScreen() {
 	var tileX = 0;
 	var tileY = 0;
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-		putTile(gameBoard[pos], tileX, tileY);
+		putTile(levelData[pos], tileX, tileY);
 		tileX++;
 		if(tileX >= widthOfLevelInTiles) {
 			tileX = 0;
@@ -849,7 +867,7 @@ window.onload = function() {
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
 	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-		gameBoard[pos] = 0;
+		levelData[pos] = 0;
 	}
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 		gateOrButtonSettings[pos] = 0;
@@ -868,6 +886,18 @@ function play(delta)
 		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 	}
 	if(!mustReleaseKey) {
+		if(sPressed) {
+			mustReleaseKey = true;
+			console.log("SAVING LEVEL.");
+			//console.log(levelData);
+			//console.log(gateOrButtonSettings);
+			var data = new FormData();
+			data.append("data", levelData);
+			data.append("data", gateOrButtonSettings);
+			var xhr = new XMLHttpRequest();
+			xhr.open( 'post', 'the_maze_save.php', true );
+			xhr.send(data);
+		}
 		if(keyBackspacePressed) {
 			mustReleaseKey = true;
 			if(optionWindow && enteringInput) {
@@ -898,7 +928,7 @@ function play(delta)
 			mustReleaseKey = true;
 			if(!optionWindow) {
 				var gameBoardPos = (tileCoords[1] * widthOfLevelInTiles) + tileCoords[0];
-				if(gameBoard[gameBoardPos] >= 16 && gameBoard[gameBoardPos] <= 19) {
+				if(levelData[gameBoardPos] >= 16 && levelData[gameBoardPos] <= 19) {
 					optionWindow = true;
 					var buttonDataPos = ((tileCoords[1] * widthOfLevelInTiles) + tileCoords[0]) * 295;
 					var bitValue = 0x80;
@@ -923,7 +953,7 @@ function play(delta)
 						}
 					}
 				}
-				else if(gameBoard[gameBoardPos] >= 20 && gameBoard[gameBoardPos] <= 23) {
+				else if(levelData[gameBoardPos] >= 20 && levelData[gameBoardPos] <= 23) {
 					optionWindow = true;
 					enteringInput = true;
 					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
@@ -1008,7 +1038,7 @@ function play(delta)
 			}
 		}
 	}
-	if(!keyBackspacePressed && !key0Pressed && !key1Pressed && !key2Pressed && !key3Pressed && !key4Pressed && !key5Pressed && !key6Pressed && !key7Pressed && !key8Pressed && !key9Pressed && !zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !enterPressed && !spacePressed) {
+	if(!keyBackspacePressed && !sPressed && !key0Pressed && !key1Pressed && !key2Pressed && !key3Pressed && !key4Pressed && !key5Pressed && !key6Pressed && !key7Pressed && !key8Pressed && !key9Pressed && !zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !enterPressed && !spacePressed) {
 		mustReleaseKey = false;
 	}
 }
