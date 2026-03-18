@@ -4,14 +4,28 @@ const tileWidth                              = 19;
 const tileHeight                             = 19;
 const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
-var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata, sTileWidth, sTileHeight;
+var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
+sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
+userInput;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var goingup                                  = false;
 var goingdown                                = false;
 var goingleft                                = false;
 var goingright                               = false;
+var keyBackspacePressed                      = false;
+var enterPressed                             = false;
 var spacePressed                             = false;
+var key0Pressed                              = false;
+var key1Pressed                              = false;
+var key2Pressed                              = false;
+var key3Pressed                              = false;
+var key4Pressed                              = false;
+var key5Pressed                              = false;
+var key6Pressed                              = false;
+var key7Pressed                              = false;
+var key8Pressed                              = false;
+var key9Pressed                              = false;
 var zPressed                                 = false;
 var xPressed                                 = false;
 var mustReleaseKey                           = false;
@@ -25,6 +39,9 @@ var gfxScaledToCurrentDeviceResolutionSdata  = gfxScaledToCurrentDeviceResolutio
 var bgInItsCurrentStateBuffer                = document.getElementById("bgInItsCurrentStateBuffer");
 var bgInItsCurrentStateCtx                   = bgInItsCurrentStateBuffer.getContext("2d");
 var bgInItsCurrentStateSdata                 = bgInItsCurrentStateCtx.createImageData(1910, 909);
+var storedBgBufferBuffer                     = document.getElementById("storedBgBufferBuffer");
+var storedBgBufferCtx                        = storedBgBufferBuffer.getContext("2d");
+var storedBgBufferSdata                      = storedBgBufferCtx.createImageData(1910, 909);
 var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
@@ -94,12 +111,59 @@ var gfx_fontBuffer                           = document.getElementById("gfx_font
 var gfx_fontCtx                              = gfx_fontBuffer.getContext("2d");
 var gfx_fontSdata                            = gfx_fontCtx.createImageData(1216, 19);
 var gfx_fontSprite                           = document.getElementById("gfx_font");
+var gfx_notselectedBuffer                    = document.getElementById("gfx_notselectedBuffer");
+var gfx_notselectedCtx                       = gfx_notselectedBuffer.getContext("2d");
+var gfx_notselectedSdata                     = gfx_notselectedCtx.createImageData(19, 19);
+var gfx_notselectedSprite                    = document.getElementById("gfx_notselected");
+var gfx_selectedBuffer                       = document.getElementById("gfx_selectedBuffer");
+var gfx_selectedCtx                          = gfx_selectedBuffer.getContext("2d");
+var gfx_selectedSdata                        = gfx_selectedCtx.createImageData(19, 19);
+var gfx_selectedSprite                       = document.getElementById("gfx_selected");
+var gfx_buttonNBuffer                        = document.getElementById("gfx_buttonNBuffer");
+var gfx_buttonNCtx                           = gfx_buttonNBuffer.getContext("2d");
+var gfx_buttonNSdata                         = gfx_buttonNCtx.createImageData(19, 19);
+var gfx_buttonNSprite                        = document.getElementById("gfx_buttonN");
+var gfx_buttonSBuffer                        = document.getElementById("gfx_buttonSBuffer");
+var gfx_buttonSCtx                           = gfx_buttonSBuffer.getContext("2d");
+var gfx_buttonSSdata                         = gfx_buttonSCtx.createImageData(19, 19);
+var gfx_buttonSSprite                        = document.getElementById("gfx_buttonS");
+var gfx_buttonEBuffer                        = document.getElementById("gfx_buttonEBuffer");
+var gfx_buttonECtx                           = gfx_buttonEBuffer.getContext("2d");
+var gfx_buttonESdata                         = gfx_buttonECtx.createImageData(19, 19);
+var gfx_buttonESprite                        = document.getElementById("gfx_buttonE");
+var gfx_buttonWBuffer                        = document.getElementById("gfx_buttonWBuffer");
+var gfx_buttonWCtx                           = gfx_buttonWBuffer.getContext("2d");
+var gfx_buttonWSdata                         = gfx_buttonWCtx.createImageData(19, 19);
+var gfx_buttonWSprite                        = document.getElementById("gfx_buttonW");
+var gfx_gatehorizontalBuffer                 = document.getElementById("gfx_gatehorizontalBuffer");
+var gfx_gatehorizontalCtx                    = gfx_gatehorizontalBuffer.getContext("2d");
+var gfx_gatehorizontalSdata                  = gfx_gatehorizontalCtx.createImageData(19, 19);
+var gfx_gatehorizontalSprite                 = document.getElementById("gfx_gatehorizontal");
+var gfx_gateverticalBuffer                   = document.getElementById("gfx_gateverticalBuffer");
+var gfx_gateverticalCtx                      = gfx_gateverticalBuffer.getContext("2d");
+var gfx_gateverticalSdata                    = gfx_gateverticalCtx.createImageData(19, 19);
+var gfx_gateverticalSprite                   = document.getElementById("gfx_gatevertical");
+var gfx_inactivegatehorizontalBuffer         = document.getElementById("gfx_inactivegatehorizontalBuffer");
+var gfx_inactivegatehorizontalCtx            = gfx_inactivegatehorizontalBuffer.getContext("2d");
+var gfx_inactivegatehorizontalSdata          = gfx_inactivegatehorizontalCtx.createImageData(19, 19);
+var gfx_inactivegatehorizontalSprite         = document.getElementById("gfx_inactivegatehorizontal");
+var gfx_inactivegateverticalBuffer           = document.getElementById("gfx_inactivegateverticalBuffer");
+var gfx_inactivegateverticalCtx              = gfx_inactivegateverticalBuffer.getContext("2d");
+var gfx_inactivegateverticalSdata            = gfx_inactivegateverticalCtx.createImageData(19, 19);
+var gfx_inactivegateverticalSprite           = document.getElementById("gfx_inactivegatevertical");
+var gfx_cursorBuffer                         = document.getElementById("gfx_cursorBuffer");
+var gfx_cursorCtx                            = gfx_cursorBuffer.getContext("2d");
+var gfx_cursorSdata                          = gfx_cursorCtx.createImageData(19, 19);
+var gfx_cursorSprite                         = document.getElementById("gfx_cursor");
 var playerX                                  = 0; // TILE X pos of player
 var playerY                                  = 0; // TILE Y pos of player
 var currentlySelectedTile                    = 1;
 var bombs                                    = 0; // Number of bombs in player's possession
 var keys                                     = 0; // Number of keys in player's possession
 var gameBoard                                = [];
+var gateOrButtonSettings                     = []; // Multi purpose array. When a tile has a gate in it, the array offset for that tile contains the ID of that gate. When a tile has a button in it, the array offset for that tile contains the properties of the button (which gates are affected by the button).
+var optionWindow                             = false;
+var enteringInput                            = false;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -123,13 +187,133 @@ loader
 function setup() 
 {
 	// Capture the keyboard arrow keys.
-	let left = keyboard(37),
+	let keyBackspace = keyboard(8),
+	enter = keyboard(13),
+	left = keyboard(37),
 	up = keyboard(38),
 	right = keyboard(39),
 	down = keyboard(40),
 	spacebar = keyboard(32),
-	keyz = keyboard(90),
-	keyx = keyboard(88);
+	key0 = keyboard(48),
+	key1 = keyboard(49),
+	key2 = keyboard(50),
+	key3 = keyboard(51),
+	key4 = keyboard(52),
+	key5 = keyboard(53),
+	key6 = keyboard(54),
+	key7 = keyboard(55),
+	key8 = keyboard(56),
+	key9 = keyboard(57),
+	keyx = keyboard(88),
+	keyz = keyboard(90);
+	// Key "Backspace".
+	keyBackspace.press = () =>
+	{
+		keyBackspacePressed = true;
+	};
+	keyBackspace.release = () =>
+	{
+		keyBackspacePressed = false;
+	};
+	// Key "0".
+	key0.press = () =>
+	{
+		key0Pressed = true;
+	};
+	key0.release = () =>
+	{
+		key0Pressed = false;
+	};
+	// Key "1".
+	key1.press = () =>
+	{
+		key1Pressed = true;
+	};
+	key1.release = () =>
+	{
+		key1Pressed = false;
+	};
+	// Key "2".
+	key2.press = () =>
+	{
+		key2Pressed = true;
+	};
+	key2.release = () =>
+	{
+		key2Pressed = false;
+	};
+	// Key "3".
+	key3.press = () =>
+	{
+		key3Pressed = true;
+	};
+	key3.release = () =>
+	{
+		key3Pressed = false;
+	};
+	// Key "4".
+	key4.press = () =>
+	{
+		key4Pressed = true;
+	};
+	key4.release = () =>
+	{
+		key4Pressed = false;
+	};
+	// Key "5".
+	key5.press = () =>
+	{
+		key5Pressed = true;
+	};
+	key5.release = () =>
+	{
+		key5Pressed = false;
+	};
+	// Key "6".
+	key6.press = () =>
+	{
+		key6Pressed = true;
+	};
+	key6.release = () =>
+	{
+		key6Pressed = false;
+	};
+	// Key "7".
+	key7.press = () =>
+	{
+		key7Pressed = true;
+	};
+	key7.release = () =>
+	{
+		key7Pressed = false;
+	};
+	// Key "8".
+	key8.press = () =>
+	{
+		key8Pressed = true;
+	};
+	key8.release = () =>
+	{
+		key8Pressed = false;
+	};
+	// Key "9".
+	key9.press = () =>
+	{
+		key9Pressed = true;
+	};
+	key9.release = () =>
+	{
+		key9Pressed = false;
+	};
+	// Key "Enter".
+	enter.press = () =>
+	{
+		enterPressed = true;
+	};
+	enter.release = () =>
+	{
+		enterPressed = false;
+	};
 	// Key "Z".
 	keyz.press = () =>
 	{
@@ -331,17 +515,75 @@ function putTile(tile, x, y) {
 		case 15:
 			bgInItsCurrentStateCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
 			break;
+		case 16:
+			bgInItsCurrentStateCtx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			break;
+		case 17:
+			bgInItsCurrentStateCtx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			break;
+		case 18:
+			bgInItsCurrentStateCtx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			break;
+		case 19:
+			bgInItsCurrentStateCtx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			break;
+		case 20:
+			bgInItsCurrentStateCtx.drawImage(gfx_gatehorizontalBuffer, x * 19, y * 19);
+			break;
+		case 21:
+			bgInItsCurrentStateCtx.drawImage(gfx_gateverticalBuffer, x * 19, y * 19);
+			break;
+		case 22:
+			bgInItsCurrentStateCtx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			break;
+		case 23:
+			bgInItsCurrentStateCtx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			break;
 	}
 }
 
-function clickGameScreen(event) {
+function getTileCoords(x, y) {
 	var xfactor = 1920 / deviceWidth;
 	var yfactor = 909 / deviceHeight;
-	console.log("clicked x,y: " + event.offsetX + "," + event.offsetY);
-	var x = Math.floor((event.offsetX * xfactor) / 19);
-	var y = Math.floor((event.offsetY * yfactor) / 19);
-	console.log("RESULTING TILE X,TILE Y: " + x + "," + y);
-	putTile(currentlySelectedTile, x, y);
+	var tileX = Math.floor((x * xfactor) / 19);
+	var tileY = Math.floor((y * yfactor) / 19);
+	console.log("RESULTING TILE X,TILE Y: " + tileX + "," + tileY);
+	return [tileX, tileY];
+}
+
+function clickGameScreen(event) {
+	var coords = getTileCoords(event.offsetX, event.offsetY);
+	if(!optionWindow) {
+		var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
+		for(var offset = 0; offset < 295; offset++) {
+			gateOrButtonSettings[dataPos + offset] = 0;
+		}
+		putTile(currentlySelectedTile, coords[0], coords[1]);
+	}
+	else {
+		// Mouse click handler when an option window of some sort is on the screen.
+		// Gate ID checkbox tile X coords: 21 to 80
+		// Gate ID checkbox tile Y coords: 4 to 43
+		if(coords[0] >= 21 && coords[0] <= 79 && coords[1] >= 4 && coords[1] <= 43) {
+			var checkboxNumber = ((coords[1] - 4) * 59) + coords[0] - 21;
+			var clickOffset = Math.floor(checkboxNumber / 8);
+			var modulo = checkboxNumber % 8;
+			var bitValue = 128 >> modulo;
+			console.log("clicked checkbox " + checkboxNumber);
+			if((gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + clickOffset] & bitValue) == 0) {
+				bgInItsCurrentStateCtx.drawImage(gfx_selectedBuffer, coords[0] * 19, coords[1] * 19);
+			}
+			else {
+				bgInItsCurrentStateCtx.drawImage(gfx_notselectedBuffer, coords[0] * 19, coords[1] * 19);
+			}
+			gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + clickOffset] ^= bitValue;
+		}
+	}
+}
+
+function moveMouse(event) {
+	mouseX = event.offsetX;
+	mouseY = event.offsetY;
 }
 
 function putText(textX, textY, text) {
@@ -349,6 +591,29 @@ function putText(textX, textY, text) {
 		var letter = text.charCodeAt(pos) - 32;
 		bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
 		textX += letterWidth;
+	}
+}
+
+// Toggle all those gates that are affected by the button.
+function toggleGates(buttonPos) {
+	var x = 0;
+	var y = 0;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		if(gameBoard[pos] >= 20 && gameBoard[pos] <= 23) {
+			var gateId = gateOrButtonSettings[pos * 295] + (gateOrButtonSettings[(pos * 295) + 1] * 256);
+			var arrayPos = Math.floor(gateId / 8);
+			var modulo = gateId % 8;
+			var bitValue = 128 >> modulo;
+			if((gateOrButtonSettings[buttonPos + arrayPos] & bitValue) != 0) {
+				var toggledGateValue = gameBoard[pos] ^ 2;
+				putTile(toggledGateValue, x, y);
+			}
+		}
+		x++;
+		if(x >= widthOfLevelInTiles) {
+			x = 0;
+			y++;
+		}
 	}
 }
 
@@ -440,7 +705,40 @@ function canMove(x, y, direction) {
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
 	}
+	else if((gameBoard[checkPos] & 0x7F) >= 16 && (gameBoard[checkPos] & 0x7F) <= 19) {
+		console.log("** PUSHED BUTTON AT X,Y POS " + x + "," + y + " **");
+		currentGateOrButtonSettingsArrayPos = ((y * widthOfLevelInTiles) + x) * 295;
+		toggleGates(currentGateOrButtonSettingsArrayPos);
+	}
+	else if((gameBoard[checkPos] & 0x7F) == 22) {
+		return true;
+	}
+	else if((gameBoard[checkPos] & 0x7F) == 23) {
+		return true;
+	}
 	return false;
+}
+
+function refreshScreen() {
+	var tileX = 0;
+	var tileY = 0;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		putTile(gameBoard[pos], tileX, tileY);
+		tileX++;
+		if(tileX >= widthOfLevelInTiles) {
+			tileX = 0;
+			tileY++;
+		}
+	}
+}
+
+function putUserInputText() {
+	for(var pos = 0; pos < (userInput.length + 2); pos++) {
+		bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 665 + (pos * 19), 56, 19, 19, 665 + (pos * 19), 56, 19, 19);
+	}
+	var cursorX = 665 + (userInput.length * letterWidth);
+	putText(665, 56, userInput);
+	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, 56);
 }
 
 window.onload = function() {
@@ -488,6 +786,17 @@ window.onload = function() {
 	gfx_keyCtx.drawImage(gfx_keySprite, 0, 0);
 	gfx_lockCtx.drawImage(gfx_lockSprite, 0, 0);
 	gfx_wallCtx.drawImage(gfx_wallSprite, 0, 0);
+	gfx_notselectedCtx.drawImage(gfx_notselectedSprite, 0, 0);
+	gfx_selectedCtx.drawImage(gfx_selectedSprite, 0, 0);
+	gfx_buttonNCtx.drawImage(gfx_buttonNSprite, 0, 0);
+	gfx_buttonSCtx.drawImage(gfx_buttonSSprite, 0, 0);
+	gfx_buttonECtx.drawImage(gfx_buttonESprite, 0, 0);
+	gfx_buttonWCtx.drawImage(gfx_buttonWSprite, 0, 0);
+	gfx_gatehorizontalCtx.drawImage(gfx_gatehorizontalSprite, 0, 0);
+	gfx_gateverticalCtx.drawImage(gfx_gateverticalSprite, 0, 0);
+	gfx_inactivegatehorizontalCtx.drawImage(gfx_inactivegatehorizontalSprite, 0, 0);
+	gfx_inactivegateverticalCtx.drawImage(gfx_inactivegateverticalSprite, 0, 0);
+	gfx_cursorCtx.drawImage(gfx_cursorSprite, 0, 0);
 
 	gfx_ball1Sdata = gfx_ball1Ctx.getImageData(0, 0, gfx_ball1Buffer.width, gfx_ball1Buffer.height);
 	gfx_ball2Sdata = gfx_ball2Ctx.getImageData(0, 0, gfx_ball2Buffer.width, gfx_ball2Buffer.height);
@@ -501,6 +810,14 @@ window.onload = function() {
 	gfx_crateholderSdata = gfx_crateholderCtx.getImageData(0, 0, gfx_crateholderBuffer.width, gfx_crateholderBuffer.height);
 	gfx_keySdata = gfx_keyCtx.getImageData(0, 0, gfx_keyBuffer.width, gfx_keyBuffer.height);
 	gfx_lockSdata = gfx_lockCtx.getImageData(0, 0, gfx_lockBuffer.width, gfx_lockBuffer.height);
+	gfx_buttonNSdata = gfx_buttonNCtx.getImageData(0, 0, gfx_buttonNBuffer.width, gfx_buttonNBuffer.height);
+	gfx_buttonSSdata = gfx_buttonSCtx.getImageData(0, 0, gfx_buttonSBuffer.width, gfx_buttonSBuffer.height);
+	gfx_buttonESdata = gfx_buttonECtx.getImageData(0, 0, gfx_buttonEBuffer.width, gfx_buttonEBuffer.height);
+	gfx_buttonWSdata = gfx_buttonWCtx.getImageData(0, 0, gfx_buttonWBuffer.width, gfx_buttonWBuffer.height);
+	gfx_gatehorizontalSdata = gfx_gatehorizontalCtx.getImageData(0, 0, gfx_gatehorizontalBuffer.width, gfx_gatehorizontalBuffer.height);
+	gfx_gateverticalSdata = gfx_gateverticalCtx.getImageData(0, 0, gfx_gateverticalBuffer.width, gfx_gateverticalBuffer.height);
+	gfx_inactivegatehorizontalSdata = gfx_inactivegatehorizontalCtx.getImageData(0, 0, gfx_inactivegatehorizontalBuffer.width, gfx_inactivegatehorizontalBuffer.height);
+	gfx_inactivegateverticalSdata = gfx_inactivegateverticalCtx.getImageData(0, 0, gfx_inactivegateverticalBuffer.width, gfx_inactivegateverticalBuffer.height);
 	doSpriteTransparency(gfx_ball1Ctx, gfx_ball1Buffer, gfx_ball1Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball2Ctx, gfx_ball2Buffer, gfx_ball2Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball3Ctx, gfx_ball3Buffer, gfx_ball3Sdata, 255, 255, 255);
@@ -513,6 +830,14 @@ window.onload = function() {
 	doSpriteTransparency(gfx_crateholderCtx, gfx_crateholderBuffer, gfx_crateholderSdata, 255, 255, 255);
 	doSpriteTransparency(gfx_keyCtx, gfx_keyBuffer, gfx_keySdata, 255, 255, 255);
 	doSpriteTransparency(gfx_lockCtx, gfx_lockBuffer, gfx_lockSdata, 255, 255, 255);
+	doSpriteTransparency(gfx_buttonNCtx, gfx_buttonNBuffer, gfx_buttonNSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_buttonSCtx, gfx_buttonSBuffer, gfx_buttonSSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_buttonECtx, gfx_buttonEBuffer, gfx_buttonESdata, 59, 59, 59);
+	doSpriteTransparency(gfx_buttonWCtx, gfx_buttonWBuffer, gfx_buttonWSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatehorizontalCtx, gfx_gatehorizontalBuffer, gfx_gatehorizontalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gateverticalCtx, gfx_gateverticalBuffer, gfx_gateverticalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_inactivegatehorizontalCtx, gfx_inactivegatehorizontalBuffer, gfx_inactivegatehorizontalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_inactivegateverticalCtx, gfx_inactivegateverticalBuffer, gfx_inactivegateverticalSdata, 59, 59, 59);
 
 	gfx_fontCtx.drawImage(gfx_fontSprite, 0, 0);
 	gfx_fontSdata = gfx_fontCtx.getImageData(0, 0, gfx_fontBuffer.width, gfx_fontBuffer.height);
@@ -526,67 +851,164 @@ window.onload = function() {
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
 		gameBoard[pos] = 0;
 	}
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
+		gateOrButtonSettings[pos] = 0;
+	}
+	refreshScreen();
 };
 
 function play(delta)
 {
 	if(doubleBufferSdata != null) {
 		gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+		if(!optionWindow) {
+			gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+		}
 		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
 		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 	}
 	if(!mustReleaseKey) {
-		if(zPressed) {
+		if(keyBackspacePressed) {
 			mustReleaseKey = true;
-			console.log("prev tile");
-			currentlySelectedTile--;
-			if(currentlySelectedTile < 0) {
-				currentlySelectedTile = 15;
+			if(optionWindow && enteringInput) {
+				userInput = userInput.slice(0, -1);
+				putUserInputText();
 			}
 		}
-		if(xPressed) {
+		if(key0Pressed || key1Pressed || key2Pressed || key3Pressed || key4Pressed || key5Pressed || key6Pressed || key7Pressed || key8Pressed || key9Pressed) {
 			mustReleaseKey = true;
-			console.log("next tile");
-			currentlySelectedTile++;
-			if(currentlySelectedTile > 15) {
-				currentlySelectedTile = 0;
+			var number;
+			if(key0Pressed) number = "0";
+			if(key1Pressed) number = "1";
+			if(key2Pressed) number = "2";
+			if(key3Pressed) number = "3";
+			if(key4Pressed) number = "4";
+			if(key5Pressed) number = "5";
+			if(key6Pressed) number = "6";
+			if(key7Pressed) number = "7";
+			if(key8Pressed) number = "8";
+			if(key9Pressed) number = "9";
+			if(optionWindow && enteringInput && userInput.length < 4) {
+				userInput += number;
+				putUserInputText();
 			}
 		}
-		if(goingup) {
+		if(enterPressed) {
+			var tileCoords = getTileCoords(mouseX, mouseY);
 			mustReleaseKey = true;
-			if(canMove(playerX , playerY, 0)) {
-				if(playerY > 0) {
-					playerY--;
+			if(!optionWindow) {
+				var gameBoardPos = (tileCoords[1] * widthOfLevelInTiles) + tileCoords[0];
+				if(gameBoard[gameBoardPos] >= 16 && gameBoard[gameBoardPos] <= 19) {
+					optionWindow = true;
+					var buttonDataPos = ((tileCoords[1] * widthOfLevelInTiles) + tileCoords[0]) * 295;
+					var bitValue = 0x80;
+					currentGateOrButtonSettingsArrayPos = buttonDataPos;
+					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+					// 2360 gates = 2360 bits = 295 bytes
+					putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON");
+					putText(940, 836, "OK");
+					for(var row = 0; row < 40; row++) {
+						for(var col = 0; col < 59; col++) {
+							if((gateOrButtonSettings[buttonDataPos] & bitValue) != 0) {
+								bgInItsCurrentStateCtx.drawImage(gfx_selectedBuffer, 399 + (col * 19), 76 + (row * 19));
+							}
+							else {
+								bgInItsCurrentStateCtx.drawImage(gfx_notselectedBuffer, 399 + (col * 19), 76 + (row * 19));
+							}
+							bitValue >>= 1;
+							if(bitValue == 0) {
+								bitValue = 0x80;
+								buttonDataPos++;
+							}
+						}
+					}
+				}
+				else if(gameBoard[gameBoardPos] >= 20 && gameBoard[gameBoardPos] <= 23) {
+					optionWindow = true;
+					enteringInput = true;
+					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+					storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+					currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
+					var gateId = gateOrButtonSettings[gameBoardPos * 295] + (gateOrButtonSettings[(gameBoardPos * 295) + 1] * 256);
+					userInput = "" + gateId;
+					putText(494, 56, "GATE ID:");
+					putText(494, 75, "PRESS ENTER TO CONFIRM.");
+					putUserInputText();
+				}
+			}
+			else {
+				if(enteringInput && userInput.length == 0) {
+				}
+				else {
+					optionWindow = false;
+					bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
+					refreshScreen();
+					if(enteringInput) {
+						enteringInput = false;
+						var value = parseInt(userInput);
+						if(value > 2359) {
+							value = 2359;
+						}
+						var valueB2 = Math.floor(value / 256);
+						var valueB1 = value - (valueB2 * 256);
+						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
+						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
+					}
 				}
 			}
 		}
-		if(goingdown) {
-			mustReleaseKey = true;
-			if(canMove(playerX , playerY, 1)) {
-				if(playerY < (heightOfLevelInTiles - 1)) {
-					playerY++;
+		if(!optionWindow) {
+			if(zPressed) {
+				mustReleaseKey = true;
+				console.log("prev tile");
+				currentlySelectedTile--;
+				if(currentlySelectedTile < 0) {
+					currentlySelectedTile = 23;
 				}
 			}
-		}
-		if(goingright) {
-			mustReleaseKey = true;
-			if(canMove(playerX , playerY, 2)) {
-				if(playerX < (widthOfLevelInTiles - 1)) {
-					playerX++;
+			if(xPressed) {
+				mustReleaseKey = true;
+				console.log("next tile");
+				currentlySelectedTile++;
+				if(currentlySelectedTile > 23) {
+					currentlySelectedTile = 0;
 				}
 			}
-		}
-		if(goingleft) {
-			mustReleaseKey = true;
-			if(canMove(playerX , playerY, 3)) {
-				if(playerX > 0) {
-					playerX--;
+			if(goingup) {
+				mustReleaseKey = true;
+				if(canMove(playerX , playerY, 0)) {
+					if(playerY > 0) {
+						playerY--;
+					}
+				}
+			}
+			if(goingdown) {
+				mustReleaseKey = true;
+				if(canMove(playerX , playerY, 1)) {
+					if(playerY < (heightOfLevelInTiles - 1)) {
+						playerY++;
+					}
+				}
+			}
+			if(goingright) {
+				mustReleaseKey = true;
+				if(canMove(playerX , playerY, 2)) {
+					if(playerX < (widthOfLevelInTiles - 1)) {
+						playerX++;
+					}
+				}
+			}
+			if(goingleft) {
+				mustReleaseKey = true;
+				if(canMove(playerX , playerY, 3)) {
+					if(playerX > 0) {
+						playerX--;
+					}
 				}
 			}
 		}
 	}
-	if(!zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !spacePressed) {
+	if(!keyBackspacePressed && !key0Pressed && !key1Pressed && !key2Pressed && !key3Pressed && !key4Pressed && !key5Pressed && !key6Pressed && !key7Pressed && !key8Pressed && !key9Pressed && !zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !enterPressed && !spacePressed) {
 		mustReleaseKey = false;
 	}
 }

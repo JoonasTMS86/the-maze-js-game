@@ -3,13 +3,15 @@
 <title>The Maze</title>
 <body>
 
-<canvas id="mainGfxBuffer" width="1" height="1" style="border:1px solid #d3d3d3;" onclick="clickGameScreen(event)">
+<canvas id="mainGfxBuffer" width="1" height="1" style="border:1px solid #d3d3d3;" onclick="clickGameScreen(event)" onmousemove="moveMouse(event)">
 Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="doubleBuffer" width="1" height="1" style="border:1px solid #d3d3d3;" hidden="true">
 Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="gfxScaledToCurrentDeviceResolutionBuffer" width="1910" height="909" style="border:1px solid #d3d3d3;" hidden="true">
 Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="bgInItsCurrentStateBuffer" width="1910" height="909" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="storedBgBufferBuffer" width="1910" height="909" style="border:1px solid #d3d3d3;" hidden="true">
 Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="gfx_lavaBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
 Your browser does not support the HTML5 canvas tag.</canvas>
@@ -45,6 +47,28 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 Your browser does not support the HTML5 canvas tag.</canvas>
 <canvas id="gfx_fontBuffer" width="1216" height="19" style="border:1px solid #d3d3d3;" hidden="true">
 Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_notselectedBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_selectedBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_buttonNBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_buttonSBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_buttonEBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_buttonWBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_gatehorizontalBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_gateverticalBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_inactivegatehorizontalBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_inactivegateverticalBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<canvas id="gfx_cursorBuffer" width="19" height="19" style="border:1px solid #d3d3d3;" hidden="true">
+Your browser does not support the HTML5 canvas tag.</canvas>
 
 <img id="gfx_bg" width="1910" height="909" src="the_maze_gfx_bg.jpg" hidden="true">
 <img id="gfx_lava" width="19" height="19" src="the_maze_gfx_lava.png" hidden="true">
@@ -64,6 +88,17 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <img id="gfx_wall" width="19" height="19" src="the_maze_gfx_wall.png" hidden="true">
 <img id="gfx_protagonist" width="19" height="19" src="the_maze_gfx_protagonist.png" hidden="true">
 <img id="gfx_font" width="1216" height="19" src="the_maze_gfx_font.png" hidden="true">
+<img id="gfx_notselected" width="19" height="19" src="the_maze_gfx_notselected.png" hidden="true">
+<img id="gfx_selected" width="19" height="19" src="the_maze_gfx_selected.png" hidden="true">
+<img id="gfx_buttonN" width="19" height="19" src="the_maze_gfx_buttonN.png" hidden="true">
+<img id="gfx_buttonS" width="19" height="19" src="the_maze_gfx_buttonS.png" hidden="true">
+<img id="gfx_buttonE" width="19" height="19" src="the_maze_gfx_buttonE.png" hidden="true">
+<img id="gfx_buttonW" width="19" height="19" src="the_maze_gfx_buttonW.png" hidden="true">
+<img id="gfx_gatehorizontal" width="19" height="19" src="the_maze_gfx_gatehorizontal.png" hidden="true">
+<img id="gfx_gatevertical" width="19" height="19" src="the_maze_gfx_gatevertical.png" hidden="true">
+<img id="gfx_inactivegatehorizontal" width="19" height="19" src="the_maze_gfx_inactivegatehorizontal.png" hidden="true">
+<img id="gfx_inactivegatevertical" width="19" height="19" src="the_maze_gfx_inactivegatevertical.png" hidden="true">
+<img id="gfx_cursor" width="19" height="19" src="the_maze_gfx_cursor.png" hidden="true">
 
 <script src="pixi.min.js"></script>
 <script src="the_maze.js"></script>
