@@ -156,8 +156,8 @@ var gfx_cursorBuffer                         = document.getElementById("gfx_curs
 var gfx_cursorCtx                            = gfx_cursorBuffer.getContext("2d");
 var gfx_cursorSdata                          = gfx_cursorCtx.createImageData(19, 19);
 var gfx_cursorSprite                         = document.getElementById("gfx_cursor");
-var playerX                                  = 0; // TILE X pos of player
-var playerY                                  = 0; // TILE Y pos of player
+var playerX                                  = 10; // TILE X pos of player
+var playerY                                  = 10; // TILE Y pos of player
 var currentlySelectedTile                    = 1;
 var bombs                                    = 0; // Number of bombs in player's possession
 var keys                                     = 0; // Number of keys in player's possession
@@ -866,13 +866,48 @@ window.onload = function() {
 	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
 	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
-	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-		levelData[pos] = 0;
-	}
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 		gateOrButtonSettings[pos] = 0;
 	}
-	refreshScreen();
+	var level_data_to_load = fetch("the_maze_levels.lev", {
+		// Adding Get request
+		method: "GET",
+		// Setting headers
+		headers: {
+			'Content-Type': 'application/octet-stream',
+		},
+		// Setting response type to arraybuffer 
+		responseType: "arraybuffer"
+	})
+
+	// Handling the received binary data
+	.then(response =>{
+		if (response.ok){
+			return response.arrayBuffer();
+		}
+		console.log("the_maze_levels.lev loaded.");
+	})
+	.then(arraybuffer => {
+		console.log("Status ok.");
+		var loaded_level_data = new Uint8Array(arraybuffer);
+
+		// Move data to our main buffer.
+		var gobsPos = 0;
+		for(var pos = 0; pos < loaded_level_data.length; pos++) {
+			if(pos >= (widthOfLevelInTiles * heightOfLevelInTiles)) {
+				gateOrButtonSettings[gobsPos] = loaded_level_data[pos];
+				gobsPos++;
+			}
+			else {
+				levelData[pos] = loaded_level_data[pos];
+			}
+		}
+		refreshScreen();
+	})
+	// Handling the error
+	.catch(err=>{
+		console.log("Found error:", err)
+	});
 };
 
 function play(delta)
@@ -887,13 +922,15 @@ function play(delta)
 	}
 	if(!mustReleaseKey) {
 		if(sPressed) {
+			// Save the level.
 			mustReleaseKey = true;
 			console.log("SAVING LEVEL.");
-			//console.log(levelData);
-			//console.log(gateOrButtonSettings);
+			console.log("size of level data = " + levelData.length);
+			console.log("size of settings array = " + gateOrButtonSettings.length);
+			var levelDataWithSettings = levelData.concat(gateOrButtonSettings);
+			console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
 			var data = new FormData();
-			data.append("data", levelData);
-			data.append("data", gateOrButtonSettings);
+			data.append("data", levelDataWithSettings);
 			var xhr = new XMLHttpRequest();
 			xhr.open( 'post', 'the_maze_save.php', true );
 			xhr.send(data);
