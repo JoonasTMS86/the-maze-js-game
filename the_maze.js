@@ -892,14 +892,23 @@ window.onload = function() {
 		var loaded_level_data = new Uint8Array(arraybuffer);
 
 		// Move data to our main buffer.
-		var gobsPos = 0;
+		var propertiesPos = widthOfLevelInTiles * heightOfLevelInTiles;
 		for(var pos = 0; pos < loaded_level_data.length; pos++) {
-			if(pos >= (widthOfLevelInTiles * heightOfLevelInTiles)) {
-				gateOrButtonSettings[gobsPos] = loaded_level_data[pos];
-				gobsPos++;
+			levelData[pos] = loaded_level_data[pos];
+			if(levelData[pos] >= 16 && levelData[pos] <= 19) {
+				// Button properties.
+				var pPos = 295 * pos;
+				for(var offset = 0; offset < 295; offset++) {
+					gateOrButtonSettings[pPos + offset] = loaded_level_data[propertiesPos + offset];
+				}
+				propertiesPos += 295;
 			}
-			else {
-				levelData[pos] = loaded_level_data[pos];
+			if(levelData[pos] >= 20 && levelData[pos] <= 23) {
+				// Gate properties.
+				var pPos = 295 * pos;
+				gateOrButtonSettings[pPos + 0] = loaded_level_data[propertiesPos + 0];
+				gateOrButtonSettings[pPos + 1] = loaded_level_data[propertiesPos + 1];
+				propertiesPos += 2;
 			}
 		}
 		refreshScreen();
@@ -924,13 +933,37 @@ function play(delta)
 		if(sPressed) {
 			// Save the level.
 			mustReleaseKey = true;
+			var filename = "the_maze_levels.lev";
+
+			// Save the properties of those tiles which have a gate or button in them.
+			var gateOrButtonPropertiesToSave = [];
+			var sourceTileSettingsPos = 0;
+			var targetTileSettingsPos = 0;
+			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
+					// Button.
+					for(var i = 0; i < 295; i++) {
+						gateOrButtonPropertiesToSave[targetTileSettingsPos + i] = gateOrButtonSettings[sourceTileSettingsPos + i];
+					}
+					targetTileSettingsPos += 295;
+				}
+				if(levelData[pos] >= 20 && levelData[pos] <= 23) {
+					// Gate.
+					gateOrButtonPropertiesToSave[targetTileSettingsPos + 0] = gateOrButtonSettings[sourceTileSettingsPos + 0];
+					gateOrButtonPropertiesToSave[targetTileSettingsPos + 1] = gateOrButtonSettings[sourceTileSettingsPos + 1];
+					targetTileSettingsPos += 2;
+				}
+				sourceTileSettingsPos += 295;
+			}
+
 			console.log("SAVING LEVEL.");
 			console.log("size of level data = " + levelData.length);
-			console.log("size of settings array = " + gateOrButtonSettings.length);
-			var levelDataWithSettings = levelData.concat(gateOrButtonSettings);
+			console.log("size of gateOrButtonPropertiesToSave = " + gateOrButtonPropertiesToSave.length);
+			var levelDataWithSettings = levelData.concat(gateOrButtonPropertiesToSave);
 			console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
 			var data = new FormData();
 			data.append("data", levelDataWithSettings);
+			data.append("fname", filename);
 			var xhr = new XMLHttpRequest();
 			xhr.open( 'post', 'the_maze_save.php', true );
 			xhr.send(data);

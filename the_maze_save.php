@@ -4,10 +4,9 @@
         header("Access-Control-Allow-Origin: *");
 
         $datastring = $_POST['data'];
+        $fname = $_POST['fname'];
 
         $data = explode(",", $datastring);
-
-        $fname = "the_maze_levels.lev";
 
         $datatosave = '';
         foreach ($data as $chr) {
