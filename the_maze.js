@@ -754,13 +754,13 @@ function refreshScreen() {
 	}
 }
 
-function putUserInputText() {
+function putUserInputText(textX, textY) {
 	for(var pos = 0; pos < (userInput.length + 2); pos++) {
-		bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 665 + (pos * 19), 56, 19, 19, 665 + (pos * 19), 56, 19, 19);
+		bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, textX + (pos * 19), textY, 19, 19, textX + (pos * 19), textY, 19, 19);
 	}
-	var cursorX = 665 + (userInput.length * letterWidth);
-	putText(665, 56, userInput);
-	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, 56);
+	var cursorX = textX + (userInput.length * letterWidth);
+	putText(textX, textY, userInput);
+	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, textY);
 }
 
 // Second parameter should be true if the file in question is a .LEV file, otherwise false.
@@ -897,6 +897,12 @@ function saveLevel(filename) {
 	xhr.send(data);
 }
 
+function userInputEntered() {
+	optionWindow = false;
+	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
+	refreshScreen();
+}
+
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
 	screen_width  = window.screen.availWidth;
@@ -1030,15 +1036,19 @@ function play(delta)
 	}
 	if(!mustReleaseKey) {
 		if(sPressed) {
-			// Save the level.
 			mustReleaseKey = true;
-			saveLevel("simple example.lev");
+			optionWindow = true;
+			enteringInput = true;
+			userInput = "";
+			putUserInputText(665, 56);
+			// Save the level.
+			//saveLevel("simple example.lev");
 		}
 		if(keyBackspacePressed) {
 			mustReleaseKey = true;
 			if(optionWindow && enteringInput) {
 				userInput = userInput.slice(0, -1);
-				putUserInputText();
+				putUserInputText(665, 56);
 			}
 		}
 		if(key0Pressed || key1Pressed || key2Pressed || key3Pressed || key4Pressed || key5Pressed || key6Pressed || key7Pressed || key8Pressed || key9Pressed) {
@@ -1056,7 +1066,7 @@ function play(delta)
 			if(key9Pressed) number = "9";
 			if(optionWindow && enteringInput && userInput.length < 4) {
 				userInput += number;
-				putUserInputText();
+				putUserInputText(665, 56);
 			}
 		}
 		if(enterPressed) {
@@ -1099,17 +1109,13 @@ function play(delta)
 					userInput = "" + gateId;
 					putText(494, 56, "GATE ID:");
 					putText(494, 75, "PRESS ENTER TO CONFIRM.");
-					putUserInputText();
+					putUserInputText(665, 56);
 				}
 			}
 			else {
-				if(enteringInput && userInput.length == 0) {
-				}
-				else {
-					optionWindow = false;
-					bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
-					refreshScreen();
-					if(enteringInput) {
+				if(enteringInput) {
+					if(userInput.length > 0) {
+						userInputEntered();
 						enteringInput = false;
 						var value = parseInt(userInput);
 						if(value > 2359) {
@@ -1120,6 +1126,9 @@ function play(delta)
 						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
 						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
 					}
+				}
+				else {
+					userInputEntered();
 				}
 			}
 		}
