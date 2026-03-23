@@ -997,6 +997,7 @@ function play(delta)
 					fileListPos++;
 				}
 				fileListToSave[fileListPos] = 10;
+				fileListPos++;
 			}
 			console.log(fileListToSave);
 			levelDataWithSettings = levelDataWithSettings.concat(playerStartX);
