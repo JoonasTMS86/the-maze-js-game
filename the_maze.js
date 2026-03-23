@@ -9,6 +9,9 @@ sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
 userInput, playerStartX, playerStartY;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
+var typedKeyCode                             = 0;
+var typedKey                                 = "";
+var keyDown                                  = false;
 var goingup                                  = false;
 var goingdown                                = false;
 var goingleft                                = false;
@@ -820,9 +823,11 @@ function loadFile(filename, isLevelFile) {
 					name += String.fromCharCode(loaded_file_data[pos]);
 				}
 				else {
-					fileList[listPos] = name;
-					name = "";
-					listPos++;
+					if(name.length > 0) {
+						fileList[listPos] = name;
+						name = "";
+						listPos++;
+					}
 				}
 			}
 			console.log(fileList);
@@ -832,6 +837,64 @@ function loadFile(filename, isLevelFile) {
 	.catch(err=>{
 		console.log("Found error:", err)
 	});
+}
+
+function saveLevel(filename) {
+	// Save the properties of those tiles which have a gate or button in them.
+	var gateOrButtonPropertiesToSave = [];
+	var sourceTileSettingsPos = 0;
+	var targetTileSettingsPos = 0;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		if(levelData[pos] >= 16 && levelData[pos] <= 19) {
+			// Button.
+			for(var i = 0; i < 295; i++) {
+				gateOrButtonPropertiesToSave[targetTileSettingsPos + i] = gateOrButtonSettings[sourceTileSettingsPos + i];
+			}
+			targetTileSettingsPos += 295;
+		}
+		if(levelData[pos] >= 20 && levelData[pos] <= 23) {
+			// Gate.
+			gateOrButtonPropertiesToSave[targetTileSettingsPos + 0] = gateOrButtonSettings[sourceTileSettingsPos + 0];
+			gateOrButtonPropertiesToSave[targetTileSettingsPos + 1] = gateOrButtonSettings[sourceTileSettingsPos + 1];
+			targetTileSettingsPos += 2;
+		}
+		sourceTileSettingsPos += 295;
+	}
+
+	console.log("SAVING LEVEL.");
+	console.log("size of level data = " + levelData.length);
+	console.log("size of gateOrButtonPropertiesToSave = " + gateOrButtonPropertiesToSave.length);
+	var levelDataWithSettings = [];
+	var fileListToSave = [];
+	var fileListPos = 0;
+	for(var pos = 0; pos < fileList.length; pos++) {
+		for(var i = 0; i < fileList[pos].length; i++) {
+			fileListToSave[fileListPos] = fileList[pos].charCodeAt(i);
+			fileListPos++;
+		}
+		fileListToSave[fileListPos] = 10;
+		fileListPos++;
+	}
+	console.log(fileListToSave);
+	levelDataWithSettings = levelDataWithSettings.concat(playerStartX);
+	levelDataWithSettings = levelDataWithSettings.concat(playerStartY);
+	levelDataWithSettings = levelDataWithSettings.concat(levelData);
+	levelDataWithSettings = levelDataWithSettings.concat(gateOrButtonPropertiesToSave);
+	console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
+
+	var fileListData = new FormData();
+	fileListData.append("data", fileListToSave);
+	fileListData.append("fname", "filelist");
+	var fileListXhr = new XMLHttpRequest();
+	fileListXhr.open( 'post', 'the_maze_save.php', true );
+	fileListXhr.send(fileListData);
+
+	var data = new FormData();
+	data.append("data", levelDataWithSettings);
+	data.append("fname", filename);
+	var xhr = new XMLHttpRequest();
+	xhr.open( 'post', 'the_maze_save.php', true );
+	xhr.send(data);
 }
 
 window.onload = function() {
@@ -946,6 +1009,13 @@ window.onload = function() {
 	}
 	loadFile("simple example.lev", true);
 	loadFile("filelist", false);
+
+	document.addEventListener('keydown', indicateHeldDownKey);
+	function indicateHeldDownKey(e) {
+		keyDown = true;
+		typedKeyCode = e.keyCode;
+		typedKey = e.key;
+	}
 };
 
 function play(delta)
@@ -962,63 +1032,7 @@ function play(delta)
 		if(sPressed) {
 			// Save the level.
 			mustReleaseKey = true;
-			var filename = "simple example.lev";
-
-			// Save the properties of those tiles which have a gate or button in them.
-			var gateOrButtonPropertiesToSave = [];
-			var sourceTileSettingsPos = 0;
-			var targetTileSettingsPos = 0;
-			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
-					// Button.
-					for(var i = 0; i < 295; i++) {
-						gateOrButtonPropertiesToSave[targetTileSettingsPos + i] = gateOrButtonSettings[sourceTileSettingsPos + i];
-					}
-					targetTileSettingsPos += 295;
-				}
-				if(levelData[pos] >= 20 && levelData[pos] <= 23) {
-					// Gate.
-					gateOrButtonPropertiesToSave[targetTileSettingsPos + 0] = gateOrButtonSettings[sourceTileSettingsPos + 0];
-					gateOrButtonPropertiesToSave[targetTileSettingsPos + 1] = gateOrButtonSettings[sourceTileSettingsPos + 1];
-					targetTileSettingsPos += 2;
-				}
-				sourceTileSettingsPos += 295;
-			}
-
-			console.log("SAVING LEVEL.");
-			console.log("size of level data = " + levelData.length);
-			console.log("size of gateOrButtonPropertiesToSave = " + gateOrButtonPropertiesToSave.length);
-			var levelDataWithSettings = [];
-			var fileListToSave = [];
-			var fileListPos = 0;
-			for(var pos = 0; pos < fileList.length; pos++) {
-				for(var i = 0; i < fileList[pos].length; i++) {
-					fileListToSave[fileListPos] = fileList[pos].charCodeAt(i);
-					fileListPos++;
-				}
-				fileListToSave[fileListPos] = 10;
-				fileListPos++;
-			}
-			console.log(fileListToSave);
-			levelDataWithSettings = levelDataWithSettings.concat(playerStartX);
-			levelDataWithSettings = levelDataWithSettings.concat(playerStartY);
-			levelDataWithSettings = levelDataWithSettings.concat(levelData);
-			levelDataWithSettings = levelDataWithSettings.concat(gateOrButtonPropertiesToSave);
-			console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
-
-			var fileListData = new FormData();
-			fileListData.append("data", fileListToSave);
-			fileListData.append("fname", "filelist");
-			var fileListXhr = new XMLHttpRequest();
-			fileListXhr.open( 'post', 'the_maze_save.php', true );
-			fileListXhr.send(fileListData);
-
-			var data = new FormData();
-			data.append("data", levelDataWithSettings);
-			data.append("fname", filename);
-			var xhr = new XMLHttpRequest();
-			xhr.open( 'post', 'the_maze_save.php', true );
-			xhr.send(data);
+			saveLevel("simple example.lev");
 		}
 		if(keyBackspacePressed) {
 			mustReleaseKey = true;
