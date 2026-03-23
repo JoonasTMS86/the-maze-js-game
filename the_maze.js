@@ -175,6 +175,8 @@ var levelData                                = [];
 var gateOrButtonSettings                     = [];
 var optionWindow                             = false;
 var enteringInput                            = false;
+var enteringIdValueForGate                   = false;
+var numericInput                             = false; // This must be set to "true" if the user input field should only let you enter a number to it.
 var fileList                                 = [];
 
 let Application = PIXI.Application,
@@ -1017,10 +1019,14 @@ window.onload = function() {
 	loadFile("filelist", false);
 
 	document.addEventListener('keydown', indicateHeldDownKey);
+	document.addEventListener('keyup', indicateReleasedKey);
 	function indicateHeldDownKey(e) {
 		keyDown = true;
 		typedKeyCode = e.keyCode;
 		typedKey = e.key;
+	}
+	function indicateReleasedKey(e) {
+		keyDown = false;
 	}
 };
 
@@ -1035,11 +1041,17 @@ function play(delta)
 		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 	}
 	if(!mustReleaseKey) {
-		if(sPressed) {
+		if(!enteringInput && sPressed) {
+			keyDown = false;
+			typedKeyCode = 0;
 			mustReleaseKey = true;
 			optionWindow = true;
 			enteringInput = true;
+			enteringIdValueForGate = false;
 			userInput = "";
+			numericInput = false;
+			bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+			storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 			putUserInputText(665, 56);
 			// Save the level.
 			//saveLevel("simple example.lev");
@@ -1051,22 +1063,26 @@ function play(delta)
 				putUserInputText(665, 56);
 			}
 		}
-		if(key0Pressed || key1Pressed || key2Pressed || key3Pressed || key4Pressed || key5Pressed || key6Pressed || key7Pressed || key8Pressed || key9Pressed) {
-			mustReleaseKey = true;
-			var number;
-			if(key0Pressed) number = "0";
-			if(key1Pressed) number = "1";
-			if(key2Pressed) number = "2";
-			if(key3Pressed) number = "3";
-			if(key4Pressed) number = "4";
-			if(key5Pressed) number = "5";
-			if(key6Pressed) number = "6";
-			if(key7Pressed) number = "7";
-			if(key8Pressed) number = "8";
-			if(key9Pressed) number = "9";
-			if(optionWindow && enteringInput && userInput.length < 4) {
-				userInput += number;
-				putUserInputText(665, 56);
+		if(enteringInput) {
+			if(keyDown) {
+				if(typedKeyCode >= 32) {
+					if(numericInput) {
+						if(typedKeyCode >= 48 && typedKeyCode <= 57) {
+							if(userInput.length < 4) {
+								userInput += String.fromCharCode(typedKeyCode);
+								putUserInputText(665, 56);
+							}
+						}
+					}
+					else {
+						if(userInput.length < 4) {
+							userInput += String.fromCharCode(typedKeyCode);
+							putUserInputText(665, 56);
+						}
+					}
+				}
+				keyDown = false;
+				typedKeyCode = 0;
 			}
 		}
 		if(enterPressed) {
@@ -1102,6 +1118,8 @@ function play(delta)
 				else if(levelData[gameBoardPos] >= 20 && levelData[gameBoardPos] <= 23) {
 					optionWindow = true;
 					enteringInput = true;
+					numericInput = true;
+					enteringIdValueForGate = true;
 					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 					storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 					currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
@@ -1117,14 +1135,19 @@ function play(delta)
 					if(userInput.length > 0) {
 						userInputEntered();
 						enteringInput = false;
-						var value = parseInt(userInput);
-						if(value > 2359) {
-							value = 2359;
+						if(enteringIdValueForGate) {
+							var value = parseInt(userInput);
+							if(value > 2359) {
+								value = 2359;
+							}
+							var valueB2 = Math.floor(value / 256);
+							var valueB1 = value - (valueB2 * 256);
+							gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
+							gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
 						}
-						var valueB2 = Math.floor(value / 256);
-						var valueB1 = value - (valueB2 * 256);
-						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
-						gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
+						else {
+							console.log("TODO: save the file");
+						}
 					}
 				}
 				else {
