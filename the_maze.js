@@ -6,7 +6,7 @@ const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
 var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
 sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
-userInput;
+userInput, playerStartX, playerStartY;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var goingup                                  = false;
@@ -156,8 +156,8 @@ var gfx_cursorBuffer                         = document.getElementById("gfx_curs
 var gfx_cursorCtx                            = gfx_cursorBuffer.getContext("2d");
 var gfx_cursorSdata                          = gfx_cursorCtx.createImageData(19, 19);
 var gfx_cursorSprite                         = document.getElementById("gfx_cursor");
-var playerX                                  = 10; // TILE X pos of player
-var playerY                                  = 10; // TILE Y pos of player
+var playerX                                  = 0; // TILE X pos of player
+var playerY                                  = 0; // TILE Y pos of player
 var currentlySelectedTile                    = 1;
 var bombs                                    = 0; // Number of bombs in player's possession
 var keys                                     = 0; // Number of keys in player's possession
@@ -172,6 +172,7 @@ var levelData                                = [];
 var gateOrButtonSettings                     = [];
 var optionWindow                             = false;
 var enteringInput                            = false;
+var fileList                                 = [];
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -759,6 +760,80 @@ function putUserInputText() {
 	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, 56);
 }
 
+// Second parameter should be true if the file in question is a .LEV file, otherwise false.
+function loadFile(filename, isLevelFile) {
+	var file_data_to_load = fetch(filename, {
+		// Adding Get request
+		method: "GET",
+		// Setting headers
+		headers: {
+			'Content-Type': 'application/octet-stream',
+		},
+		// Setting response type to arraybuffer 
+		responseType: "arraybuffer"
+	})
+
+	// Handling the received binary data
+	.then(response =>{
+		if (response.ok){
+			return response.arrayBuffer();
+		}
+		console.log(filename + " loaded.");
+	})
+	.then(arraybuffer => {
+		console.log("Status ok.");
+		var loaded_file_data = new Uint8Array(arraybuffer);
+
+		if(isLevelFile) {
+			// Move data to our main buffer.
+			playerStartX = loaded_file_data[0];
+			playerStartY = loaded_file_data[1];
+			playerX = playerStartX;
+			playerY = playerStartY;
+			var propertiesPos = 2 + (widthOfLevelInTiles * heightOfLevelInTiles);
+			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+				levelData[pos] = loaded_file_data[(pos + 2)];
+				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
+					// Button properties.
+					var pPos = 295 * pos;
+					for(var offset = 0; offset < 295; offset++) {
+						gateOrButtonSettings[pPos + offset] = loaded_file_data[propertiesPos + offset];
+					}
+					propertiesPos += 295;
+				}
+				if(levelData[pos] >= 20 && levelData[pos] <= 23) {
+					// Gate properties.
+					var pPos = 295 * pos;
+					gateOrButtonSettings[pPos + 0] = loaded_file_data[propertiesPos + 0];
+					gateOrButtonSettings[pPos + 1] = loaded_file_data[propertiesPos + 1];
+					propertiesPos += 2;
+				}
+			}
+			refreshScreen();
+		}
+		else {
+			fileList = [];
+			var listPos = 0;
+			var name = "";
+			for(var pos = 0; pos < (loaded_file_data.length + 1); pos++) {
+				if(pos < loaded_file_data.length && loaded_file_data[pos] >= 32) {
+					name += String.fromCharCode(loaded_file_data[pos]);
+				}
+				else {
+					fileList[listPos] = name;
+					name = "";
+					listPos++;
+				}
+			}
+			console.log(fileList);
+		}
+	})
+	// Handling the error
+	.catch(err=>{
+		console.log("Found error:", err)
+	});
+}
+
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
 	screen_width  = window.screen.availWidth;
@@ -869,54 +944,8 @@ window.onload = function() {
 	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 		gateOrButtonSettings[pos] = 0;
 	}
-	var level_data_to_load = fetch("the_maze_levels.lev", {
-		// Adding Get request
-		method: "GET",
-		// Setting headers
-		headers: {
-			'Content-Type': 'application/octet-stream',
-		},
-		// Setting response type to arraybuffer 
-		responseType: "arraybuffer"
-	})
-
-	// Handling the received binary data
-	.then(response =>{
-		if (response.ok){
-			return response.arrayBuffer();
-		}
-		console.log("the_maze_levels.lev loaded.");
-	})
-	.then(arraybuffer => {
-		console.log("Status ok.");
-		var loaded_level_data = new Uint8Array(arraybuffer);
-
-		// Move data to our main buffer.
-		var propertiesPos = widthOfLevelInTiles * heightOfLevelInTiles;
-		for(var pos = 0; pos < loaded_level_data.length; pos++) {
-			levelData[pos] = loaded_level_data[pos];
-			if(levelData[pos] >= 16 && levelData[pos] <= 19) {
-				// Button properties.
-				var pPos = 295 * pos;
-				for(var offset = 0; offset < 295; offset++) {
-					gateOrButtonSettings[pPos + offset] = loaded_level_data[propertiesPos + offset];
-				}
-				propertiesPos += 295;
-			}
-			if(levelData[pos] >= 20 && levelData[pos] <= 23) {
-				// Gate properties.
-				var pPos = 295 * pos;
-				gateOrButtonSettings[pPos + 0] = loaded_level_data[propertiesPos + 0];
-				gateOrButtonSettings[pPos + 1] = loaded_level_data[propertiesPos + 1];
-				propertiesPos += 2;
-			}
-		}
-		refreshScreen();
-	})
-	// Handling the error
-	.catch(err=>{
-		console.log("Found error:", err)
-	});
+	loadFile("simple example.lev", true);
+	loadFile("filelist", false);
 };
 
 function play(delta)
@@ -933,7 +962,7 @@ function play(delta)
 		if(sPressed) {
 			// Save the level.
 			mustReleaseKey = true;
-			var filename = "the_maze_levels.lev";
+			var filename = "simple example.lev";
 
 			// Save the properties of those tiles which have a gate or button in them.
 			var gateOrButtonPropertiesToSave = [];
@@ -959,7 +988,11 @@ function play(delta)
 			console.log("SAVING LEVEL.");
 			console.log("size of level data = " + levelData.length);
 			console.log("size of gateOrButtonPropertiesToSave = " + gateOrButtonPropertiesToSave.length);
-			var levelDataWithSettings = levelData.concat(gateOrButtonPropertiesToSave);
+			var levelDataWithSettings = [];
+			levelDataWithSettings = levelDataWithSettings.concat(playerStartX);
+			levelDataWithSettings = levelDataWithSettings.concat(playerStartY);
+			levelDataWithSettings = levelDataWithSettings.concat(levelData);
+			levelDataWithSettings = levelDataWithSettings.concat(gateOrButtonPropertiesToSave);
 			console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
 			var data = new FormData();
 			data.append("data", levelDataWithSettings);
