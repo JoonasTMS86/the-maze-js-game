@@ -6,7 +6,7 @@ const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
 var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
 sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
-userInput, playerStartX, playerStartY;
+userInput, playerStartX, playerStartY, userInputMaxLength;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -1048,6 +1048,7 @@ function play(delta)
 			optionWindow = true;
 			enteringInput = true;
 			enteringIdValueForGate = false;
+			userInputMaxLength = 100;
 			userInput = "";
 			numericInput = false;
 			bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
@@ -1068,14 +1069,14 @@ function play(delta)
 				if(typedKeyCode >= 32) {
 					if(numericInput) {
 						if(typedKeyCode >= 48 && typedKeyCode <= 57) {
-							if(userInput.length < 4) {
+							if(userInput.length < userInputMaxLength) {
 								userInput += String.fromCharCode(typedKeyCode);
 								putUserInputText(665, 56);
 							}
 						}
 					}
 					else {
-						if(userInput.length < 4) {
+						if(userInput.length < userInputMaxLength) {
 							userInput += String.fromCharCode(typedKeyCode);
 							putUserInputText(665, 56);
 						}
@@ -1120,6 +1121,7 @@ function play(delta)
 					enteringInput = true;
 					numericInput = true;
 					enteringIdValueForGate = true;
+					userInputMaxLength = 4;
 					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 					storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 					currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
