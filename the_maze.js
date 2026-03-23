@@ -989,11 +989,29 @@ function play(delta)
 			console.log("size of level data = " + levelData.length);
 			console.log("size of gateOrButtonPropertiesToSave = " + gateOrButtonPropertiesToSave.length);
 			var levelDataWithSettings = [];
+			var fileListToSave = [];
+			var fileListPos = 0;
+			for(var pos = 0; pos < fileList.length; pos++) {
+				for(var i = 0; i < fileList[pos].length; i++) {
+					fileListToSave[fileListPos] = fileList[pos].charCodeAt(i);
+					fileListPos++;
+				}
+				fileListToSave[fileListPos] = 10;
+			}
+			console.log(fileListToSave);
 			levelDataWithSettings = levelDataWithSettings.concat(playerStartX);
 			levelDataWithSettings = levelDataWithSettings.concat(playerStartY);
 			levelDataWithSettings = levelDataWithSettings.concat(levelData);
 			levelDataWithSettings = levelDataWithSettings.concat(gateOrButtonPropertiesToSave);
 			console.log("size of levelDataWithSettings = " + levelDataWithSettings.length);
+
+			var fileListData = new FormData();
+			fileListData.append("data", fileListToSave);
+			fileListData.append("fname", "filelist");
+			var fileListXhr = new XMLHttpRequest();
+			fileListXhr.open( 'post', 'the_maze_save.php', true );
+			fileListXhr.send(fileListData);
+
 			var data = new FormData();
 			data.append("data", levelDataWithSettings);
 			data.append("fname", filename);
