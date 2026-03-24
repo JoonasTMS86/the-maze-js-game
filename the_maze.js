@@ -6,7 +6,8 @@ const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
 var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
 sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
-userInput, playerStartX, playerStartY, userInputMaxLength;
+userInput, playerStartX, playerStartY, userInputMaxLength, inputX, inputY,
+enteredFilename, indexOfSelection, levelsInAlphabeticOrder;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -19,6 +20,7 @@ var goingright                               = false;
 var keyBackspacePressed                      = false;
 var enterPressed                             = false;
 var spacePressed                             = false;
+var escPressed                               = false;
 var key0Pressed                              = false;
 var key1Pressed                              = false;
 var key2Pressed                              = false;
@@ -46,6 +48,9 @@ var bgInItsCurrentStateSdata                 = bgInItsCurrentStateCtx.createImag
 var storedBgBufferBuffer                     = document.getElementById("storedBgBufferBuffer");
 var storedBgBufferCtx                        = storedBgBufferBuffer.getContext("2d");
 var storedBgBufferSdata                      = storedBgBufferCtx.createImageData(1910, 909);
+var storedBgBuffer2Buffer                    = document.getElementById("storedBgBuffer2Buffer");
+var storedBgBuffer2Ctx                       = storedBgBuffer2Buffer.getContext("2d");
+var storedBgBuffer2Sdata                     = storedBgBuffer2Ctx.createImageData(1910, 909);
 var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
@@ -177,6 +182,8 @@ var optionWindow                             = false;
 var enteringInput                            = false;
 var enteringIdValueForGate                   = false;
 var numericInput                             = false; // This must be set to "true" if the user input field should only let you enter a number to it.
+var yesOrNoQuestion                          = false;
+var menuSelectionScreen                      = false;
 var fileList                                 = [];
 
 let Application = PIXI.Application,
@@ -203,6 +210,7 @@ function setup()
 	// Capture the keyboard arrow keys.
 	let keyBackspace = keyboard(8),
 	enter = keyboard(13),
+	esc = keyboard(27),
 	left = keyboard(37),
 	up = keyboard(38),
 	right = keyboard(39),
@@ -221,6 +229,15 @@ function setup()
 	keys = keyboard(83),
 	keyx = keyboard(88),
 	keyz = keyboard(90);
+	// Key "Escape".
+	esc.press = () =>
+	{
+		escPressed = true;
+	};
+	esc.release = () =>
+	{
+		escPressed = false;
+	};
 	// Key "Backspace".
 	keyBackspace.press = () =>
 	{
@@ -791,6 +808,9 @@ function loadFile(filename, isLevelFile) {
 
 		if(isLevelFile) {
 			// Move data to our main buffer.
+			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
+				gateOrButtonSettings[pos] = 0;
+			}
 			playerStartX = loaded_file_data[0];
 			playerStartY = loaded_file_data[1];
 			playerX = playerStartX;
@@ -901,8 +921,38 @@ function saveLevel(filename) {
 
 function userInputEntered() {
 	optionWindow = false;
+	menuSelectionScreen = false;
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
 	refreshScreen();
+}
+
+function drawSelection(index) {
+	// 113 = starting Y pos of selections
+	var startingY = index * letterHeight;
+	var ypos = fullSizeWidth * 4 * (startingY + 111);
+	var ypos2 = fullSizeWidth * 4 * (startingY + 112);
+	var ypos3 = fullSizeWidth * 4 * (startingY + 131);
+	var ypos4 = fullSizeWidth * 4 * (startingY + 132);
+	bgInItsCurrentStateSdata = bgInItsCurrentStateCtx.getImageData(0, 0, bgInItsCurrentStateBuffer.width, bgInItsCurrentStateBuffer.height);
+	for(var x = 0; x < fullSizeWidth; x++) {
+		bgInItsCurrentStateSdata.data[ypos + (x * 4) + 0] = 255;
+		bgInItsCurrentStateSdata.data[ypos + (x * 4) + 1] = 0;
+		bgInItsCurrentStateSdata.data[ypos + (x * 4) + 2] = 0;
+		bgInItsCurrentStateSdata.data[ypos + (x * 4) + 3] = 255;
+		bgInItsCurrentStateSdata.data[ypos2 + (x * 4) + 0] = 255;
+		bgInItsCurrentStateSdata.data[ypos2 + (x * 4) + 1] = 0;
+		bgInItsCurrentStateSdata.data[ypos2 + (x * 4) + 2] = 0;
+		bgInItsCurrentStateSdata.data[ypos2 + (x * 4) + 3] = 255;
+		bgInItsCurrentStateSdata.data[ypos3 + (x * 4) + 0] = 255;
+		bgInItsCurrentStateSdata.data[ypos3 + (x * 4) + 1] = 0;
+		bgInItsCurrentStateSdata.data[ypos3 + (x * 4) + 2] = 0;
+		bgInItsCurrentStateSdata.data[ypos3 + (x * 4) + 3] = 255;
+		bgInItsCurrentStateSdata.data[ypos4 + (x * 4) + 0] = 255;
+		bgInItsCurrentStateSdata.data[ypos4 + (x * 4) + 1] = 0;
+		bgInItsCurrentStateSdata.data[ypos4 + (x * 4) + 2] = 0;
+		bgInItsCurrentStateSdata.data[ypos4 + (x * 4) + 3] = 255;
+	}
+	bgInItsCurrentStateCtx.putImageData(bgInItsCurrentStateSdata, 0, 0);
 }
 
 window.onload = function() {
@@ -1012,9 +1062,6 @@ window.onload = function() {
 	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
 	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
-	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
-		gateOrButtonSettings[pos] = 0;
-	}
 	loadFile("simple example.lev", true);
 	loadFile("filelist", false);
 
@@ -1041,122 +1088,268 @@ function play(delta)
 		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 	}
 	if(!mustReleaseKey) {
-		if(!enteringInput && sPressed) {
-			keyDown = false;
-			typedKeyCode = 0;
-			mustReleaseKey = true;
-			optionWindow = true;
-			enteringInput = true;
-			enteringIdValueForGate = false;
-			userInputMaxLength = 100;
-			userInput = "";
-			numericInput = false;
-			bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
-			storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-			putUserInputText(665, 56);
-			// Save the level.
-			//saveLevel("simple example.lev");
-		}
-		if(keyBackspacePressed) {
-			mustReleaseKey = true;
-			if(optionWindow && enteringInput) {
-				userInput = userInput.slice(0, -1);
-				putUserInputText(665, 56);
+
+
+		if(menuSelectionScreen) {
+			if(goingup && indexOfSelection > 0) {
+				mustReleaseKey = true;
+				console.log("* UP *");
+				indexOfSelection--;
+				bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
+				drawSelection(indexOfSelection);
+			}
+			if(goingdown && indexOfSelection < (levelsInAlphabeticOrder.length - 1)) {
+				mustReleaseKey = true;
+				console.log("* DOWN *");
+				indexOfSelection++;
+				bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
+				drawSelection(indexOfSelection);
 			}
 		}
-		if(enteringInput) {
-			if(keyDown) {
-				if(typedKeyCode >= 32) {
-					if(numericInput) {
-						if(typedKeyCode >= 48 && typedKeyCode <= 57) {
-							if(userInput.length < userInputMaxLength) {
-								userInput += String.fromCharCode(typedKeyCode);
-								putUserInputText(665, 56);
+
+		if(yesOrNoQuestion) {
+			if(keyDown && typedKeyCode == 89) {
+				keyDown = false;
+				typedKeyCode = 0;
+				console.log("answered yes");
+				userInputEntered();
+				enteringInput = false;
+				optionWindow = false;
+				yesOrNoQuestion = false;
+				saveLevel(enteredFilename);
+			}
+			if(keyDown && typedKeyCode == 78) {
+				keyDown = false;
+				typedKeyCode = 0;
+				console.log("answered no");
+				userInputEntered();
+				enteringInput = false;
+				optionWindow = false;
+				yesOrNoQuestion = false;
+			}
+		}
+		else {
+			if(escPressed) {
+				mustReleaseKey = true;
+				if(optionWindow || enteringInput) {
+					enteringInput = false;
+					userInputEntered();
+				}
+			}
+			if(!enteringInput && typedKeyCode == 76) {
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				optionWindow = true;
+				enteringInput = false;
+				enteringIdValueForGate = false;
+				menuSelectionScreen = true;
+				indexOfSelection = 0;
+				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				putText(860, 37, "LOAD LEVEL");
+				putText(0, 75, "USE UP & DOWN ARROW KEYS, ENTER TO SELECT. PRESS ESC TO CANCEL.");
+				levelsInAlphabeticOrder = fileList;
+				levelsInAlphabeticOrder.sort();
+				for(var pos = 0; pos < levelsInAlphabeticOrder.length; pos++) {
+					putText(0, 113 + (pos * 19), levelsInAlphabeticOrder[pos].toUpperCase());
+				}
+				storedBgBuffer2Ctx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				drawSelection(indexOfSelection);
+			}
+			if(!enteringInput && sPressed) {
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				optionWindow = true;
+				enteringInput = true;
+				enteringIdValueForGate = false;
+				userInputMaxLength = 100;
+				userInput = "";
+				numericInput = false;
+				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				putText(813, 37, "SAVE YOUR LEVEL");
+				putText(0, 75, "ENTER FILENAME FOR YOUR THE MAZE LEVEL OR PRESS ESC TO CANCEL SAVING:");
+				inputX = 0;
+				inputY = 94;
+				putUserInputText(inputX, inputY);
+			}
+			if(keyBackspacePressed) {
+				mustReleaseKey = true;
+				if(optionWindow && enteringInput) {
+					userInput = userInput.slice(0, -1);
+					putUserInputText(inputX, inputY);
+				}
+			}
+			if(enteringInput) {
+				if(keyDown) {
+					if(typedKeyCode >= 32) {
+						if(numericInput) {
+							if(typedKeyCode >= 48 && typedKeyCode <= 57) {
+								if(userInput.length < userInputMaxLength) {
+									userInput += String.fromCharCode(typedKeyCode);
+									putUserInputText(inputX, inputY);
+								}
+							}
+						}
+						else {
+							if(userInput.length < userInputMaxLength && typedKey.length == 1 &&
+								typedKey != "\\" &&
+								typedKey != "/" &&
+								typedKey != ":" &&
+								typedKey != "*" &&
+								typedKey != "?" &&
+								typedKey != "\"" &&
+								typedKey != "<" &&
+								typedKey != ">" &&
+								typedKey != "|" &&
+								typedKey != "@" &&
+								typedKey != "£" &&
+								typedKey != "$" &&
+								typedKey != "{" &&
+								typedKey != "[" &&
+								typedKey != "]" &&
+								typedKey != "}" &&
+								typedKey != "#" &&
+								typedKey != "¤" &&
+								typedKey != "%" &&
+								typedKey != "&" &&
+								typedKey != "=" &&
+								typedKey != "^" &&
+								typedKey != "§" &&
+								typedKey != "½" &&
+								typedKey != "å" &&
+								typedKey != "Å" &&
+								typedKey != "ä" &&
+								typedKey != "Ä" &&
+								typedKey != "ö" &&
+								typedKey != "Ö"
+							) {
+								userInput += typedKey.toUpperCase();
+								putUserInputText(inputX, inputY);
+							}
+						}
+					}
+					keyDown = false;
+					typedKeyCode = 0;
+				}
+			}
+			if(enterPressed) {
+				var tileCoords = getTileCoords(mouseX, mouseY);
+				mustReleaseKey = true;
+				if(!optionWindow) {
+					var gameBoardPos = (tileCoords[1] * widthOfLevelInTiles) + tileCoords[0];
+					if(levelData[gameBoardPos] >= 16 && levelData[gameBoardPos] <= 19) {
+						optionWindow = true;
+						var buttonDataPos = ((tileCoords[1] * widthOfLevelInTiles) + tileCoords[0]) * 295;
+						var bitValue = 0x80;
+						currentGateOrButtonSettingsArrayPos = buttonDataPos;
+						bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+						// 2360 gates = 2360 bits = 295 bytes
+						putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON");
+						putText(940, 836, "OK");
+						for(var row = 0; row < 40; row++) {
+							for(var col = 0; col < 59; col++) {
+								if((gateOrButtonSettings[buttonDataPos] & bitValue) != 0) {
+									bgInItsCurrentStateCtx.drawImage(gfx_selectedBuffer, 399 + (col * 19), 76 + (row * 19));
+								}
+								else {
+									bgInItsCurrentStateCtx.drawImage(gfx_notselectedBuffer, 399 + (col * 19), 76 + (row * 19));
+								}
+								bitValue >>= 1;
+								if(bitValue == 0) {
+									bitValue = 0x80;
+									buttonDataPos++;
+								}
+							}
+						}
+					}
+					else if(levelData[gameBoardPos] >= 20 && levelData[gameBoardPos] <= 23) {
+						optionWindow = true;
+						enteringInput = true;
+						numericInput = true;
+						enteringIdValueForGate = true;
+						userInputMaxLength = 4;
+						bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+						storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+						currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
+						var gateId = gateOrButtonSettings[gameBoardPos * 295] + (gateOrButtonSettings[(gameBoardPos * 295) + 1] * 256);
+						userInput = "" + gateId;
+						putText(494, 56, "GATE ID:");
+						putText(494, 75, "PRESS ENTER TO CONFIRM.");
+						inputX = 665;
+						inputY = 56;
+						putUserInputText(inputX, inputY);
+					}
+				}
+				else if(menuSelectionScreen) {
+					console.log("Chose to load level: " + levelsInAlphabeticOrder[indexOfSelection]);
+					userInputEntered();
+					loadFile(levelsInAlphabeticOrder[indexOfSelection], true);
+					loadFile("filelist", false);
+				}
+				else {
+					if(enteringInput) {
+						if(userInput.length > 0) {
+							if(enteringIdValueForGate) {
+								userInputEntered();
+								enteringInput = false;
+								var value = parseInt(userInput);
+								if(value > 2359) {
+									value = 2359;
+								}
+								var valueB2 = Math.floor(value / 256);
+								var valueB1 = value - (valueB2 * 256);
+								gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
+								gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
+							}
+							else {
+								enteredFilename = userInput.trim().toLowerCase();
+								enteredFilename = enteredFilename.concat(".lev");
+								console.log("TODO: save the file");
+								console.log("filename:");
+								console.log(enteredFilename);
+								// Check that no file with the given filename exists. Otherwise, inform the user.
+								var exists = false;
+								for(var pos = 0; pos < fileList.length; pos++) {
+									if(fileList[pos] == enteredFilename) {
+										exists = true;
+										pos = fileList.length;
+									}
+								}
+								if(exists) {
+									keyDown = false;
+									typedKeyCode = 0;
+									yesOrNoQuestion = true;
+									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)");
+								}
+								else {
+									fileList[fileList.length] = enteredFilename;
+									console.log("filelist:");
+									console.log(fileList);
+									userInputEntered();
+									enteringInput = false;
+									optionWindow = false;
+									saveLevel(enteredFilename);
+								}
 							}
 						}
 					}
 					else {
-						if(userInput.length < userInputMaxLength) {
-							userInput += String.fromCharCode(typedKeyCode);
-							putUserInputText(665, 56);
-						}
-					}
-				}
-				keyDown = false;
-				typedKeyCode = 0;
-			}
-		}
-		if(enterPressed) {
-			var tileCoords = getTileCoords(mouseX, mouseY);
-			mustReleaseKey = true;
-			if(!optionWindow) {
-				var gameBoardPos = (tileCoords[1] * widthOfLevelInTiles) + tileCoords[0];
-				if(levelData[gameBoardPos] >= 16 && levelData[gameBoardPos] <= 19) {
-					optionWindow = true;
-					var buttonDataPos = ((tileCoords[1] * widthOfLevelInTiles) + tileCoords[0]) * 295;
-					var bitValue = 0x80;
-					currentGateOrButtonSettingsArrayPos = buttonDataPos;
-					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
-					// 2360 gates = 2360 bits = 295 bytes
-					putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON");
-					putText(940, 836, "OK");
-					for(var row = 0; row < 40; row++) {
-						for(var col = 0; col < 59; col++) {
-							if((gateOrButtonSettings[buttonDataPos] & bitValue) != 0) {
-								bgInItsCurrentStateCtx.drawImage(gfx_selectedBuffer, 399 + (col * 19), 76 + (row * 19));
-							}
-							else {
-								bgInItsCurrentStateCtx.drawImage(gfx_notselectedBuffer, 399 + (col * 19), 76 + (row * 19));
-							}
-							bitValue >>= 1;
-							if(bitValue == 0) {
-								bitValue = 0x80;
-								buttonDataPos++;
-							}
-						}
-					}
-				}
-				else if(levelData[gameBoardPos] >= 20 && levelData[gameBoardPos] <= 23) {
-					optionWindow = true;
-					enteringInput = true;
-					numericInput = true;
-					enteringIdValueForGate = true;
-					userInputMaxLength = 4;
-					bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
-					storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-					currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
-					var gateId = gateOrButtonSettings[gameBoardPos * 295] + (gateOrButtonSettings[(gameBoardPos * 295) + 1] * 256);
-					userInput = "" + gateId;
-					putText(494, 56, "GATE ID:");
-					putText(494, 75, "PRESS ENTER TO CONFIRM.");
-					putUserInputText(665, 56);
-				}
-			}
-			else {
-				if(enteringInput) {
-					if(userInput.length > 0) {
 						userInputEntered();
-						enteringInput = false;
-						if(enteringIdValueForGate) {
-							var value = parseInt(userInput);
-							if(value > 2359) {
-								value = 2359;
-							}
-							var valueB2 = Math.floor(value / 256);
-							var valueB1 = value - (valueB2 * 256);
-							gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 0] = valueB1;
-							gateOrButtonSettings[currentGateOrButtonSettingsArrayPos + 1] = valueB2;
-						}
-						else {
-							console.log("TODO: save the file");
-						}
 					}
-				}
-				else {
-					userInputEntered();
 				}
 			}
 		}
+
+
+
+
+
+
+
+
 		if(!optionWindow) {
 			if(zPressed) {
 				mustReleaseKey = true;
@@ -1208,7 +1401,7 @@ function play(delta)
 			}
 		}
 	}
-	if(!keyBackspacePressed && !sPressed && !key0Pressed && !key1Pressed && !key2Pressed && !key3Pressed && !key4Pressed && !key5Pressed && !key6Pressed && !key7Pressed && !key8Pressed && !key9Pressed && !zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !enterPressed && !spacePressed) {
+	if(!escPressed && !keyBackspacePressed && !sPressed && !key0Pressed && !key1Pressed && !key2Pressed && !key3Pressed && !key4Pressed && !key5Pressed && !key6Pressed && !key7Pressed && !key8Pressed && !key9Pressed && !zPressed && !xPressed && !goingup && !goingdown && !goingleft && !goingright && !enterPressed && !spacePressed) {
 		mustReleaseKey = false;
 	}
 }
