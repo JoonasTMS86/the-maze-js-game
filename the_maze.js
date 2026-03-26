@@ -51,11 +51,22 @@ var storedBgBufferSdata                      = storedBgBufferCtx.createImageData
 var storedBgBuffer2Buffer                    = document.getElementById("storedBgBuffer2Buffer");
 var storedBgBuffer2Ctx                       = storedBgBuffer2Buffer.getContext("2d");
 var storedBgBuffer2Sdata                     = storedBgBuffer2Ctx.createImageData(1910, 909);
+var storedBgBuffer3Buffer                    = document.getElementById("storedBgBuffer3Buffer");
+var storedBgBuffer3Ctx                       = storedBgBuffer3Buffer.getContext("2d");
+var storedBgBuffer3Sdata                     = storedBgBuffer3Ctx.createImageData(1910, 909);
 var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
 var gfx_lavaSdata                            = gfx_lavaCtx.createImageData(19, 19);
 var gfx_lavaSprite                           = document.getElementById("gfx_lava");
+var gfx_lava2Buffer                           = document.getElementById("gfx_lava2Buffer");
+var gfx_lava2Ctx                              = gfx_lava2Buffer.getContext("2d");
+var gfx_lava2Sdata                            = gfx_lava2Ctx.createImageData(19, 19);
+var gfx_lava2Sprite                           = document.getElementById("gfx_lava2");
+var gfx_lava3Buffer                           = document.getElementById("gfx_lava3Buffer");
+var gfx_lava3Ctx                              = gfx_lava3Buffer.getContext("2d");
+var gfx_lava3Sdata                            = gfx_lava3Ctx.createImageData(19, 19);
+var gfx_lava3Sprite                           = document.getElementById("gfx_lava3");
 var gfx_ball1Buffer                          = document.getElementById("gfx_ball1Buffer");
 var gfx_ball1Ctx                             = gfx_ball1Buffer.getContext("2d");
 var gfx_ball1Sdata                           = gfx_ball1Ctx.createImageData(19, 19);
@@ -148,10 +159,26 @@ var gfx_gatehorizontalBuffer                 = document.getElementById("gfx_gate
 var gfx_gatehorizontalCtx                    = gfx_gatehorizontalBuffer.getContext("2d");
 var gfx_gatehorizontalSdata                  = gfx_gatehorizontalCtx.createImageData(19, 19);
 var gfx_gatehorizontalSprite                 = document.getElementById("gfx_gatehorizontal");
+var gfx_gatehorizontal2Buffer                 = document.getElementById("gfx_gatehorizontal2Buffer");
+var gfx_gatehorizontal2Ctx                    = gfx_gatehorizontal2Buffer.getContext("2d");
+var gfx_gatehorizontal2Sdata                  = gfx_gatehorizontal2Ctx.createImageData(19, 19);
+var gfx_gatehorizontal2Sprite                 = document.getElementById("gfx_gatehorizontal2");
+var gfx_gatehorizontal3Buffer                 = document.getElementById("gfx_gatehorizontal3Buffer");
+var gfx_gatehorizontal3Ctx                    = gfx_gatehorizontal3Buffer.getContext("2d");
+var gfx_gatehorizontal3Sdata                  = gfx_gatehorizontal3Ctx.createImageData(19, 19);
+var gfx_gatehorizontal3Sprite                 = document.getElementById("gfx_gatehorizontal3");
 var gfx_gateverticalBuffer                   = document.getElementById("gfx_gateverticalBuffer");
 var gfx_gateverticalCtx                      = gfx_gateverticalBuffer.getContext("2d");
 var gfx_gateverticalSdata                    = gfx_gateverticalCtx.createImageData(19, 19);
 var gfx_gateverticalSprite                   = document.getElementById("gfx_gatevertical");
+var gfx_gatevertical2Buffer                   = document.getElementById("gfx_gatevertical2Buffer");
+var gfx_gatevertical2Ctx                      = gfx_gatevertical2Buffer.getContext("2d");
+var gfx_gatevertical2Sdata                    = gfx_gatevertical2Ctx.createImageData(19, 19);
+var gfx_gatevertical2Sprite                   = document.getElementById("gfx_gatevertical2");
+var gfx_gatevertical3Buffer                   = document.getElementById("gfx_gatevertical3Buffer");
+var gfx_gatevertical3Ctx                      = gfx_gatevertical3Buffer.getContext("2d");
+var gfx_gatevertical3Sdata                    = gfx_gatevertical3Ctx.createImageData(19, 19);
+var gfx_gatevertical3Sprite                   = document.getElementById("gfx_gatevertical3");
 var gfx_inactivegatehorizontalBuffer         = document.getElementById("gfx_inactivegatehorizontalBuffer");
 var gfx_inactivegatehorizontalCtx            = gfx_inactivegatehorizontalBuffer.getContext("2d");
 var gfx_inactivegatehorizontalSdata          = gfx_inactivegatehorizontalCtx.createImageData(19, 19);
@@ -185,6 +212,8 @@ var numericInput                             = false; // This must be set to "tr
 var yesOrNoQuestion                          = false;
 var menuSelectionScreen                      = false;
 var fileList                                 = [];
+var animTimeElapsed                          = 0;
+var animFrame                                = 0;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -444,6 +473,7 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
+// *GFX*
 function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	var matches = false;
 	var origPos = (y * widthOfLevelInTiles) + x;
@@ -454,51 +484,85 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	if(levelData[posN] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
+		storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
+		storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
+		storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
 		levelData[posN] = 0;
 	}
 	if(levelData[posS] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
+		storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
+		storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
+		storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
 		levelData[posS] = 0;
 	}
 	if(levelData[posE] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
+		storedBgBufferCtx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
+		storedBgBuffer2Ctx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
+		storedBgBuffer3Ctx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
 		levelData[posE] = 0;
 	}
 	if(levelData[posW] == objectId) {
 		matches = true;
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
+		storedBgBufferCtx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
+		storedBgBuffer2Ctx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
+		storedBgBuffer3Ctx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
 		levelData[posW] = 0;
 	}
 	if(matches) {
 		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+		storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+		storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+		storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
 		levelData[origPos] = 0;
 	}
 	else {
 		switch(objectId) {
 			case 1:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
 				break;
 			case 2:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
 				break;
 			case 3:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
 				break;
 			case 4:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
 				break;
 			case 5:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
 				break;
 			case 6:
 				bgInItsCurrentStateCtx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+				storedBgBufferCtx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+				storedBgBuffer2Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+				storedBgBuffer3Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
 				break;
 		}
 	}
 }
 
+// *GFX*
 function putTile(tile, x, y) {
 	var gameBoardPos = (y * widthOfLevelInTiles) + x;
 	levelData[gameBoardPos] = tile;
@@ -507,9 +571,15 @@ function putTile(tile, x, y) {
 
 	// First, remove any possible tile that might be at that position of the screen.
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
 	switch(tile) {
 		case 0:
 			bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
 			break;
 		case 1:
 			checkForOtherBallsOfTheSameColor(1, x, y);
@@ -531,54 +601,105 @@ function putTile(tile, x, y) {
 			break;
 		case 7:
 			bgInItsCurrentStateCtx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_bombBuffer, x * 19, y * 19);
 			break;
 		case 8:
 			bgInItsCurrentStateCtx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
 			break;
 		case 9:
 			bgInItsCurrentStateCtx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
 			break;
 		case 10:
 			bgInItsCurrentStateCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			break;
 		case 11:
 			bgInItsCurrentStateCtx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_keyBuffer, x * 19, y * 19);
 			break;
 		case 12:
 			bgInItsCurrentStateCtx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_lockBuffer, x * 19, y * 19);
 			break;
 		case 13:
 			bgInItsCurrentStateCtx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
 			break;
 		case 14:
 			bgInItsCurrentStateCtx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_wallBuffer, x * 19, y * 19);
 			break;
 		case 15:
 			bgInItsCurrentStateCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_lava2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_lava3Buffer, x * 19, y * 19);
 			break;
 		case 16:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
 			break;
 		case 17:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
 			break;
 		case 18:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
 			break;
 		case 19:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
 			break;
 		case 20:
 			bgInItsCurrentStateCtx.drawImage(gfx_gatehorizontalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_gatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_gatehorizontal2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_gatehorizontal3Buffer, x * 19, y * 19);
 			break;
 		case 21:
 			bgInItsCurrentStateCtx.drawImage(gfx_gateverticalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_gateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_gatevertical2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_gatevertical3Buffer, x * 19, y * 19);
 			break;
 		case 22:
 			bgInItsCurrentStateCtx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
 			break;
 		case 23:
 			bgInItsCurrentStateCtx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
 			break;
 	}
 }
@@ -955,6 +1076,7 @@ function drawSelection(index) {
 	bgInItsCurrentStateCtx.putImageData(bgInItsCurrentStateSdata, 0, 0);
 }
 
+// *GFX*
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
 	screen_width  = window.screen.availWidth;
@@ -985,6 +1107,8 @@ window.onload = function() {
 	doubleBufferSdata = doubleBufferCtx.getImageData(0, 0, doubleBuffer.width, doubleBuffer.height);
 
 	gfx_lavaCtx.drawImage(gfx_lavaSprite, 0, 0);
+	gfx_lava2Ctx.drawImage(gfx_lava2Sprite, 0, 0);
+	gfx_lava3Ctx.drawImage(gfx_lava3Sprite, 0, 0);
 	gfx_protagonistCtx.drawImage(gfx_protagonistSprite, 0, 0);
 	gfx_ball1Ctx.drawImage(gfx_ball1Sprite, 0, 0);
 	gfx_ball2Ctx.drawImage(gfx_ball2Sprite, 0, 0);
@@ -1007,7 +1131,11 @@ window.onload = function() {
 	gfx_buttonECtx.drawImage(gfx_buttonESprite, 0, 0);
 	gfx_buttonWCtx.drawImage(gfx_buttonWSprite, 0, 0);
 	gfx_gatehorizontalCtx.drawImage(gfx_gatehorizontalSprite, 0, 0);
+	gfx_gatehorizontal2Ctx.drawImage(gfx_gatehorizontal2Sprite, 0, 0);
+	gfx_gatehorizontal3Ctx.drawImage(gfx_gatehorizontal3Sprite, 0, 0);
 	gfx_gateverticalCtx.drawImage(gfx_gateverticalSprite, 0, 0);
+	gfx_gatevertical2Ctx.drawImage(gfx_gatevertical2Sprite, 0, 0);
+	gfx_gatevertical3Ctx.drawImage(gfx_gatevertical3Sprite, 0, 0);
 	gfx_inactivegatehorizontalCtx.drawImage(gfx_inactivegatehorizontalSprite, 0, 0);
 	gfx_inactivegateverticalCtx.drawImage(gfx_inactivegateverticalSprite, 0, 0);
 	gfx_cursorCtx.drawImage(gfx_cursorSprite, 0, 0);
@@ -1029,7 +1157,11 @@ window.onload = function() {
 	gfx_buttonESdata = gfx_buttonECtx.getImageData(0, 0, gfx_buttonEBuffer.width, gfx_buttonEBuffer.height);
 	gfx_buttonWSdata = gfx_buttonWCtx.getImageData(0, 0, gfx_buttonWBuffer.width, gfx_buttonWBuffer.height);
 	gfx_gatehorizontalSdata = gfx_gatehorizontalCtx.getImageData(0, 0, gfx_gatehorizontalBuffer.width, gfx_gatehorizontalBuffer.height);
+	gfx_gatehorizontal2Sdata = gfx_gatehorizontal2Ctx.getImageData(0, 0, gfx_gatehorizontal2Buffer.width, gfx_gatehorizontal2Buffer.height);
+	gfx_gatehorizontal3Sdata = gfx_gatehorizontal3Ctx.getImageData(0, 0, gfx_gatehorizontal3Buffer.width, gfx_gatehorizontal3Buffer.height);
 	gfx_gateverticalSdata = gfx_gateverticalCtx.getImageData(0, 0, gfx_gateverticalBuffer.width, gfx_gateverticalBuffer.height);
+	gfx_gatevertical2Sdata = gfx_gatevertical2Ctx.getImageData(0, 0, gfx_gatevertical2Buffer.width, gfx_gatevertical2Buffer.height);
+	gfx_gatevertical3Sdata = gfx_gatevertical3Ctx.getImageData(0, 0, gfx_gatevertical3Buffer.width, gfx_gatevertical3Buffer.height);
 	gfx_inactivegatehorizontalSdata = gfx_inactivegatehorizontalCtx.getImageData(0, 0, gfx_inactivegatehorizontalBuffer.width, gfx_inactivegatehorizontalBuffer.height);
 	gfx_inactivegateverticalSdata = gfx_inactivegateverticalCtx.getImageData(0, 0, gfx_inactivegateverticalBuffer.width, gfx_inactivegateverticalBuffer.height);
 	doSpriteTransparency(gfx_ball1Ctx, gfx_ball1Buffer, gfx_ball1Sdata, 255, 255, 255);
@@ -1049,7 +1181,11 @@ window.onload = function() {
 	doSpriteTransparency(gfx_buttonECtx, gfx_buttonEBuffer, gfx_buttonESdata, 59, 59, 59);
 	doSpriteTransparency(gfx_buttonWCtx, gfx_buttonWBuffer, gfx_buttonWSdata, 59, 59, 59);
 	doSpriteTransparency(gfx_gatehorizontalCtx, gfx_gatehorizontalBuffer, gfx_gatehorizontalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatehorizontal2Ctx, gfx_gatehorizontal2Buffer, gfx_gatehorizontal2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatehorizontal3Ctx, gfx_gatehorizontal3Buffer, gfx_gatehorizontal3Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_gateverticalCtx, gfx_gateverticalBuffer, gfx_gateverticalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatevertical2Ctx, gfx_gatevertical2Buffer, gfx_gatevertical2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatevertical3Ctx, gfx_gatevertical3Buffer, gfx_gatevertical3Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_inactivegatehorizontalCtx, gfx_inactivegatehorizontalBuffer, gfx_inactivegatehorizontalSdata, 59, 59, 59);
 	doSpriteTransparency(gfx_inactivegateverticalCtx, gfx_inactivegateverticalBuffer, gfx_inactivegateverticalSdata, 59, 59, 59);
 
@@ -1058,6 +1194,9 @@ window.onload = function() {
 	doSpriteTransparency(gfx_fontCtx, gfx_fontBuffer, gfx_fontSdata, 146, 41, 0); // 0x92 0x29 0x00
 
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBufferCtx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBuffer2Ctx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBuffer3Ctx.drawImage(gfx_bgSprite, 0, 0);
 
 	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
@@ -1077,9 +1216,31 @@ window.onload = function() {
 	}
 };
 
+// *GFX*
 function play(delta)
 {
 	if(doubleBufferSdata != null) {
+		if(!optionWindow && !enteringInput) {
+			animTimeElapsed++;
+			if(animTimeElapsed >= 25) {
+				animTimeElapsed = 0;
+				animFrame++;
+				if(animFrame >= 3) {
+					animFrame = 0;
+				}
+				switch(animFrame) {
+					case 0:
+						bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
+						break;
+					case 1:
+						bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
+						break;
+					case 2:
+						bgInItsCurrentStateCtx.drawImage(storedBgBuffer3Buffer, 0, 0);
+						break;
+				}
+			}
+		}
 		gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 		if(!optionWindow) {
 			gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
