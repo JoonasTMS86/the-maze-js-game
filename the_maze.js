@@ -567,7 +567,7 @@ function putTile(tile, x, y) {
 	var gameBoardPos = (y * widthOfLevelInTiles) + x;
 	levelData[gameBoardPos] = tile;
 
-	tile &= 0x7F;
+	tile &= 0x1F;
 
 	// First, remove any possible tile that might be at that position of the screen.
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
@@ -808,35 +808,53 @@ function canMove(x, y, direction) {
 	}
 	var checkPos = (y * widthOfLevelInTiles) + x;
 	console.log("bumped into object id " + levelData[checkPos] + " at " + x + "," + y);
-	if((levelData[checkPos] & 0x7F) < 12) {
+	if((levelData[checkPos] & 0x1F) < 12 || (levelData[checkPos] & 0x1F) == 22 || (levelData[checkPos] & 0x1F) == 23) {
 		var tileUnderneath = 0;
 		if((levelData[checkPos] & 0x80) != 0) {
 			tileUnderneath = 10;
 		}
+		if((levelData[checkPos] & 0x40) != 0) {
+			tileUnderneath = 22;
+		}
+		if((levelData[checkPos] & 0x20) != 0) {
+			tileUnderneath = 23;
+		}
 		// IDs of movable objects: 1,2,3,4,5,6,8,9
 		// Add 128 to the value if the object in question has a crate holder underneath it.
 		if(
-			(levelData[checkPos] & 0x7F) == 1 ||
-			(levelData[checkPos] & 0x7F) == 2 ||
-			(levelData[checkPos] & 0x7F) == 3 ||
-			(levelData[checkPos] & 0x7F) == 4 ||
-			(levelData[checkPos] & 0x7F) == 5 ||
-			(levelData[checkPos] & 0x7F) == 6 ||
-			(levelData[checkPos] & 0x7F) == 8 ||
-			(levelData[checkPos] & 0x7F) == 9
+			(levelData[checkPos] & 0x1F) == 1 ||
+			(levelData[checkPos] & 0x1F) == 2 ||
+			(levelData[checkPos] & 0x1F) == 3 ||
+			(levelData[checkPos] & 0x1F) == 4 ||
+			(levelData[checkPos] & 0x1F) == 5 ||
+			(levelData[checkPos] & 0x1F) == 6 ||
+			(levelData[checkPos] & 0x1F) == 8 ||
+			(levelData[checkPos] & 0x1F) == 9
 		) {
-			if((levelData[checkPos] & 0x7F) == 8 && levelData[newPosOfMovableObject] == 15) {
+			if((levelData[checkPos] & 0x1F) == 8 && levelData[newPosOfMovableObject] == 15) {
 				console.log("boulder dropped into lava");
 			}
-			else if(levelData[newPosOfMovableObject] != 0 && levelData[newPosOfMovableObject] != 10) {
+			else if(
+				levelData[newPosOfMovableObject] != 0 &&
+				levelData[newPosOfMovableObject] != 10 &&
+				levelData[newPosOfMovableObject] != 22 &&
+				levelData[newPosOfMovableObject] != 23
+			) {
 				return false;
 			}
 			var markerUnderneath = 0x0;
-			if(levelData[newPosOfMovableObject] == 10) {
-				console.log("YES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-				markerUnderneath = 0x80;
+			switch(levelData[newPosOfMovableObject]) {
+				case 10:
+					markerUnderneath = 0x80;
+					break;
+				case 22:
+					markerUnderneath = 0x40;
+					break;
+				case 23:
+					markerUnderneath = 0x20;
+					break;
 			}
-			var tileToPut = (levelData[checkPos] & 0x7F) | markerUnderneath;
+			var tileToPut = (levelData[checkPos] & 0x1F) | markerUnderneath;
 			if(levelData[newPosOfMovableObject] == 15) {
 				tileToPut = 0;
 			}
@@ -844,38 +862,38 @@ function canMove(x, y, direction) {
 			putTile(tileUnderneath, x, y);
 			putTile(tileToPut, newX, newY);
 		}
-		else if((levelData[checkPos] & 0x7F) == 7) {
+		else if((levelData[checkPos] & 0x1F) == 7) {
 			bombs++;
 			console.log("bomb");
 			putTile(0, x, y);
 		}
-		else if((levelData[checkPos] & 0x7F) == 11) {
+		else if((levelData[checkPos] & 0x1F) == 11) {
 			keys++;
 			console.log("key");
 			putTile(0, x, y);
 		}
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 12 && keys > 0) {
+	else if((levelData[checkPos] & 0x1F) == 12 && keys > 0) {
 		keys--;
 		console.log("lock unlocked");
 		putTile(0, x, y);
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 13 && bombs > 0) {
+	else if((levelData[checkPos] & 0x1F) == 13 && bombs > 0) {
 		bombs--;
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
 	}
-	else if((levelData[checkPos] & 0x7F) >= 16 && (levelData[checkPos] & 0x7F) <= 19) {
+	else if((levelData[checkPos] & 0x1F) >= 16 && (levelData[checkPos] & 0x1F) <= 19) {
 		console.log("** PUSHED BUTTON AT X,Y POS " + x + "," + y + " **");
 		currentGateOrButtonSettingsArrayPos = ((y * widthOfLevelInTiles) + x) * 295;
 		toggleGates(currentGateOrButtonSettingsArrayPos);
 	}
-	else if((levelData[checkPos] & 0x7F) == 22) {
+	else if((levelData[checkPos] & 0x1F) == 22) {
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 23) {
+	else if((levelData[checkPos] & 0x1F) == 23) {
 		return true;
 	}
 	return false;
