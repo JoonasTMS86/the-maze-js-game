@@ -4,12 +4,13 @@ const tileWidth                              = 19;
 const tileHeight                             = 19;
 const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
-const spriteAnims                            = [0, 1, 2, 3, 2, 1, 0];
+const sparkleAnim                            = [0, 1, 2, 3, 2, 1, 0];
 var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
 sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
 userInput, playerStartX, playerStartY, userInputMaxLength, inputX, inputY,
 enteredFilename, indexOfSelection, levelsInAlphabeticOrder, spriteAnimFrame,
-spriteAnimDelay, spriteAnimPos, coordsOfSpriteAnimFrames, coordsOfTilesToClear;
+spriteAnimDelay, spriteAnimPos, coordsOfSpriteAnimFrames, coordsOfTilesToClear,
+animObjectType;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -209,6 +210,42 @@ var gfx_sparkle4Buffer                       = document.getElementById("gfx_spar
 var gfx_sparkle4Ctx                          = gfx_sparkle4Buffer.getContext("2d");
 var gfx_sparkle4Sdata                        = gfx_sparkle4Ctx.createImageData(19, 19);
 var gfx_sparkle4Sprite                       = document.getElementById("gfx_sparkle4");
+var gfx_xplode1Buffer                        = document.getElementById("gfx_xplode1Buffer");
+var gfx_xplode1Ctx                           = gfx_xplode1Buffer.getContext("2d");
+var gfx_xplode1Sdata                         = gfx_xplode1Ctx.createImageData(19, 19);
+var gfx_xplode1Sprite                        = document.getElementById("gfx_xplode1");
+var gfx_xplode2Buffer                        = document.getElementById("gfx_xplode2Buffer");
+var gfx_xplode2Ctx                           = gfx_xplode2Buffer.getContext("2d");
+var gfx_xplode2Sdata                         = gfx_xplode2Ctx.createImageData(19, 19);
+var gfx_xplode2Sprite                        = document.getElementById("gfx_xplode2");
+var gfx_xplode3Buffer                        = document.getElementById("gfx_xplode3Buffer");
+var gfx_xplode3Ctx                           = gfx_xplode3Buffer.getContext("2d");
+var gfx_xplode3Sdata                         = gfx_xplode3Ctx.createImageData(19, 19);
+var gfx_xplode3Sprite                        = document.getElementById("gfx_xplode3");
+var gfx_xplode4Buffer                        = document.getElementById("gfx_xplode4Buffer");
+var gfx_xplode4Ctx                           = gfx_xplode4Buffer.getContext("2d");
+var gfx_xplode4Sdata                         = gfx_xplode4Ctx.createImageData(19, 19);
+var gfx_xplode4Sprite                        = document.getElementById("gfx_xplode4");
+var gfx_xplode5Buffer                        = document.getElementById("gfx_xplode5Buffer");
+var gfx_xplode5Ctx                           = gfx_xplode5Buffer.getContext("2d");
+var gfx_xplode5Sdata                         = gfx_xplode5Ctx.createImageData(19, 19);
+var gfx_xplode5Sprite                        = document.getElementById("gfx_xplode5");
+var gfx_xplode6Buffer                        = document.getElementById("gfx_xplode6Buffer");
+var gfx_xplode6Ctx                           = gfx_xplode6Buffer.getContext("2d");
+var gfx_xplode6Sdata                         = gfx_xplode6Ctx.createImageData(19, 19);
+var gfx_xplode6Sprite                        = document.getElementById("gfx_xplode6");
+var gfx_xplode7Buffer                        = document.getElementById("gfx_xplode7Buffer");
+var gfx_xplode7Ctx                           = gfx_xplode7Buffer.getContext("2d");
+var gfx_xplode7Sdata                         = gfx_xplode7Ctx.createImageData(19, 19);
+var gfx_xplode7Sprite                        = document.getElementById("gfx_xplode7");
+var gfx_xplode8Buffer                        = document.getElementById("gfx_xplode8Buffer");
+var gfx_xplode8Ctx                           = gfx_xplode8Buffer.getContext("2d");
+var gfx_xplode8Sdata                         = gfx_xplode8Ctx.createImageData(19, 19);
+var gfx_xplode8Sprite                        = document.getElementById("gfx_xplode8");
+var gfx_xplode9Buffer                        = document.getElementById("gfx_xplode9Buffer");
+var gfx_xplode9Ctx                           = gfx_xplode9Buffer.getContext("2d");
+var gfx_xplode9Sdata                         = gfx_xplode9Ctx.createImageData(19, 19);
+var gfx_xplode9Sprite                        = document.getElementById("gfx_xplode9");
 
 var playerX                                  = 0; // TILE X pos of player
 var playerY                                  = 0; // TILE Y pos of player
@@ -532,6 +569,7 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	}
 	if(matches) {
 		animatingSprite = true;
+		animObjectType = 0;
 		addAnimFrame(x, y);
 	}
 	switch(objectId) {
@@ -893,6 +931,15 @@ function canMove(x, y, direction) {
 		return true;
 	}
 	else if((levelData[checkPos] & 0x1F) == 13 && bombs > 0) {
+		// Animate the wall that blows up.
+		coordsOfSpriteAnimFrames = [];
+		coordsOfTilesToClear = [];
+		spriteAnimFrame = 0;
+		spriteAnimDelay = 0;
+		spriteAnimPos = 0;
+		animatingSprite = true;
+		animObjectType = 1;
+		addAnimFrame(x, y);
 		bombs--;
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
@@ -1110,49 +1157,103 @@ function doSpriteAnimation() {
 	gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 	gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 	for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
-		switch(spriteAnimFrame) {
-			case 0:
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle1Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
-				break;
-			case 1:
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle2Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
-				break;
-			case 2:
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle3Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
-				break;
-			case 3:
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle4Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
-				break;
+		if(animObjectType == 0) {
+			switch(spriteAnimFrame) {
+				case 0:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle1Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 1:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle2Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 2:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle3Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 3:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle4Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+			}
+		}
+		else {
+			switch(spriteAnimFrame) {
+				case 0:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode1Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 1:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode2Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 2:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode3Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 3:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode4Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 4:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode5Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 5:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode6Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 6:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode7Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 7:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode8Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 8:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode9Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+			}
 		}
 	}
 	doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
 	mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+	var nextFrame = false;
 	spriteAnimDelay++;
-	if(spriteAnimDelay >= 6) {
+	switch(animObjectType) {
+		case 0:
+			if(spriteAnimDelay >= 6) {
+				nextFrame = true;
+			}
+			break;
+		case 1:
+			if(spriteAnimDelay >= 4) {
+				nextFrame = true;
+			}
+			break;
+	}
+	if(nextFrame) {
 		spriteAnimDelay = 0;
-		spriteAnimPos++;
-		if(spriteAnimPos == 4) {
-			for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
-				var tilePos = (coordsOfTilesToClear[pos + 1] * widthOfLevelInTiles) + coordsOfTilesToClear[pos + 0];
-				if((levelData[tilePos] & 0x80) != 0 ) {
-					putTile(10, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
-				}
-				else if((levelData[tilePos] & 0x40) != 0 ) {
-					putTile(22, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
-				}
-				else if((levelData[tilePos] & 0x20) != 0 ) {
-					putTile(23, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
-				}
-				else {
-					putTile(0, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+		if(animObjectType == 0) {
+			spriteAnimPos++;
+			if(spriteAnimPos == 4) {
+				for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
+					var tilePos = (coordsOfTilesToClear[pos + 1] * widthOfLevelInTiles) + coordsOfTilesToClear[pos + 0];
+					if((levelData[tilePos] & 0x80) != 0 ) {
+						putTile(10, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else if((levelData[tilePos] & 0x40) != 0 ) {
+						putTile(22, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else if((levelData[tilePos] & 0x20) != 0 ) {
+						putTile(23, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else {
+						putTile(0, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
 				}
 			}
-		}
-		if(spriteAnimPos >= spriteAnims.length) {
-			animatingSprite = false;
+			if(spriteAnimPos >= sparkleAnim.length) {
+				animatingSprite = false;
+			}
+			else {
+				spriteAnimFrame = sparkleAnim[spriteAnimPos];
+			}
 		}
 		else {
-			spriteAnimFrame = spriteAnims[spriteAnimPos];
+			spriteAnimFrame++;
+			if(spriteAnimFrame >= 9) {
+				animatingSprite = false;
+			}
 		}
 	}
 }
@@ -1224,6 +1325,15 @@ window.onload = function() {
 	gfx_sparkle2Ctx.drawImage(gfx_sparkle2Sprite, 0, 0);
 	gfx_sparkle3Ctx.drawImage(gfx_sparkle3Sprite, 0, 0);
 	gfx_sparkle4Ctx.drawImage(gfx_sparkle4Sprite, 0, 0);
+	gfx_xplode1Ctx.drawImage(gfx_xplode1Sprite, 0, 0);
+	gfx_xplode2Ctx.drawImage(gfx_xplode2Sprite, 0, 0);
+	gfx_xplode3Ctx.drawImage(gfx_xplode3Sprite, 0, 0);
+	gfx_xplode4Ctx.drawImage(gfx_xplode4Sprite, 0, 0);
+	gfx_xplode5Ctx.drawImage(gfx_xplode5Sprite, 0, 0);
+	gfx_xplode6Ctx.drawImage(gfx_xplode6Sprite, 0, 0);
+	gfx_xplode7Ctx.drawImage(gfx_xplode7Sprite, 0, 0);
+	gfx_xplode8Ctx.drawImage(gfx_xplode8Sprite, 0, 0);
+	gfx_xplode9Ctx.drawImage(gfx_xplode9Sprite, 0, 0);
 
 	gfx_ball1Sdata = gfx_ball1Ctx.getImageData(0, 0, gfx_ball1Buffer.width, gfx_ball1Buffer.height);
 	gfx_ball2Sdata = gfx_ball2Ctx.getImageData(0, 0, gfx_ball2Buffer.width, gfx_ball2Buffer.height);
@@ -1253,6 +1363,15 @@ window.onload = function() {
 	gfx_sparkle2Sdata = gfx_sparkle2Ctx.getImageData(0, 0, gfx_sparkle2Buffer.width, gfx_sparkle2Buffer.height);
 	gfx_sparkle3Sdata = gfx_sparkle3Ctx.getImageData(0, 0, gfx_sparkle3Buffer.width, gfx_sparkle3Buffer.height);
 	gfx_sparkle4Sdata = gfx_sparkle4Ctx.getImageData(0, 0, gfx_sparkle4Buffer.width, gfx_sparkle4Buffer.height);
+	gfx_xplode1Sdata = gfx_xplode1Ctx.getImageData(0, 0, gfx_xplode1Buffer.width, gfx_xplode1Buffer.height);
+	gfx_xplode2Sdata = gfx_xplode2Ctx.getImageData(0, 0, gfx_xplode2Buffer.width, gfx_xplode2Buffer.height);
+	gfx_xplode3Sdata = gfx_xplode3Ctx.getImageData(0, 0, gfx_xplode3Buffer.width, gfx_xplode3Buffer.height);
+	gfx_xplode4Sdata = gfx_xplode4Ctx.getImageData(0, 0, gfx_xplode4Buffer.width, gfx_xplode4Buffer.height);
+	gfx_xplode5Sdata = gfx_xplode5Ctx.getImageData(0, 0, gfx_xplode5Buffer.width, gfx_xplode5Buffer.height);
+	gfx_xplode6Sdata = gfx_xplode6Ctx.getImageData(0, 0, gfx_xplode6Buffer.width, gfx_xplode6Buffer.height);
+	gfx_xplode7Sdata = gfx_xplode7Ctx.getImageData(0, 0, gfx_xplode7Buffer.width, gfx_xplode7Buffer.height);
+	gfx_xplode8Sdata = gfx_xplode8Ctx.getImageData(0, 0, gfx_xplode8Buffer.width, gfx_xplode8Buffer.height);
+	gfx_xplode9Sdata = gfx_xplode9Ctx.getImageData(0, 0, gfx_xplode9Buffer.width, gfx_xplode9Buffer.height);
 	doSpriteTransparency(gfx_ball1Ctx, gfx_ball1Buffer, gfx_ball1Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball2Ctx, gfx_ball2Buffer, gfx_ball2Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball3Ctx, gfx_ball3Buffer, gfx_ball3Sdata, 255, 255, 255);
@@ -1281,6 +1400,15 @@ window.onload = function() {
 	doSpriteTransparency(gfx_sparkle2Ctx, gfx_sparkle2Buffer, gfx_sparkle2Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_sparkle3Ctx, gfx_sparkle3Buffer, gfx_sparkle3Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_sparkle4Ctx, gfx_sparkle4Buffer, gfx_sparkle4Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode1Ctx, gfx_xplode1Buffer, gfx_xplode1Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode2Ctx, gfx_xplode2Buffer, gfx_xplode2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode3Ctx, gfx_xplode3Buffer, gfx_xplode3Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode4Ctx, gfx_xplode4Buffer, gfx_xplode4Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode5Ctx, gfx_xplode5Buffer, gfx_xplode5Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode6Ctx, gfx_xplode6Buffer, gfx_xplode6Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode7Ctx, gfx_xplode7Buffer, gfx_xplode7Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode8Ctx, gfx_xplode8Buffer, gfx_xplode8Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode9Ctx, gfx_xplode9Buffer, gfx_xplode9Sdata, 59, 59, 59);
 
 	gfx_fontCtx.drawImage(gfx_fontSprite, 0, 0);
 	gfx_fontSdata = gfx_fontCtx.getImageData(0, 0, gfx_fontBuffer.width, gfx_fontBuffer.height);
