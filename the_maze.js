@@ -57,6 +57,9 @@ var storedBgBuffer2Sdata                     = storedBgBuffer2Ctx.createImageDat
 var storedBgBuffer3Buffer                    = document.getElementById("storedBgBuffer3Buffer");
 var storedBgBuffer3Ctx                       = storedBgBuffer3Buffer.getContext("2d");
 var storedBgBuffer3Sdata                     = storedBgBuffer3Ctx.createImageData(1910, 909);
+var statusBarBuffer                          = document.getElementById("statusBarBuffer");
+var statusBarCtx                             = statusBarBuffer.getContext("2d");
+var statusBarSdata                           = statusBarCtx.createImageData(1910, 19);
 var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
@@ -766,11 +769,13 @@ function getTileCoords(x, y) {
 function clickGameScreen(event) {
 	var coords = getTileCoords(event.offsetX, event.offsetY);
 	if(!optionWindow) {
-		var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
-		for(var offset = 0; offset < 295; offset++) {
-			gateOrButtonSettings[dataPos + offset] = 0;
+		if(coords[0] < 100 && coords[1] < 47) {
+			var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
+			for(var offset = 0; offset < 295; offset++) {
+				gateOrButtonSettings[dataPos + offset] = 0;
+			}
+			putTile(currentlySelectedTile, coords[0], coords[1]);
 		}
-		putTile(currentlySelectedTile, coords[0], coords[1]);
 	}
 	else {
 		// Mouse click handler when an option window of some sort is on the screen.
@@ -798,10 +803,17 @@ function moveMouse(event) {
 	mouseY = event.offsetY;
 }
 
-function putText(textX, textY, text) {
+function putText(textX, textY, text, target) {
 	for(var pos = 0; pos < text.length; pos++) {
 		var letter = text.charCodeAt(pos) - 32;
-		bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+		switch(target) {
+			case 0:
+				bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+				break;
+			case 1:
+				statusBarCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+				break;
+		}
 		textX += letterWidth;
 	}
 }
@@ -914,11 +926,13 @@ function canMove(x, y, direction) {
 		}
 		else if((levelData[checkPos] & 0x1F) == 7) {
 			bombs++;
+			updateStatusBar();
 			console.log("bomb");
 			putTile(0, x, y);
 		}
 		else if((levelData[checkPos] & 0x1F) == 11) {
 			keys++;
+			updateStatusBar();
 			console.log("key");
 			putTile(0, x, y);
 		}
@@ -926,6 +940,7 @@ function canMove(x, y, direction) {
 	}
 	else if((levelData[checkPos] & 0x1F) == 12 && keys > 0) {
 		keys--;
+		updateStatusBar();
 		console.log("lock unlocked");
 		putTile(0, x, y);
 		return true;
@@ -941,6 +956,7 @@ function canMove(x, y, direction) {
 		animObjectType = 1;
 		addAnimFrame(x, y);
 		bombs--;
+		updateStatusBar();
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
 	}
@@ -976,7 +992,7 @@ function putUserInputText(textX, textY) {
 		bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, textX + (pos * 19), textY, 19, 19, textX + (pos * 19), textY, 19, 19);
 	}
 	var cursorX = textX + (userInput.length * letterWidth);
-	putText(textX, textY, userInput);
+	putText(textX, textY, userInput, 0);
 	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, textY);
 }
 
@@ -1156,6 +1172,7 @@ function drawSelection(index) {
 function doSpriteAnimation() {
 	gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 	gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+	gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
 	for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
 		if(animObjectType == 0) {
 			switch(spriteAnimFrame) {
@@ -1256,6 +1273,40 @@ function doSpriteAnimation() {
 			}
 		}
 	}
+}
+
+function updateStatusBar() {
+	statusBarSdata = statusBarCtx.getImageData(0, 0, statusBarBuffer.width, statusBarBuffer.height);
+	var rowStride = statusBarBuffer.width * 4;
+	for(var y = 0; y < 19; y++) {
+		for(var x = 0; x < statusBarBuffer.width; x++) {
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 0] = 0;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 1] = 64;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 2] = 64;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 3] = 255;
+		}
+	}
+	statusBarCtx.putImageData(statusBarSdata, 0, 0);
+	var bombsText, keysText;
+	if(bombs < 10) {
+		bombsText = "00" + bombs;
+	}
+	else if(bombs < 100) {
+		bombsText = "0" + bombs;
+	}
+	else {
+		bombsText = bombs;
+	}
+	if(keys < 10) {
+		keysText = "00" + keys;
+	}
+	else if(keys < 100) {
+		keysText = "0" + keys;
+	}
+	else {
+		keysText = keys;
+	}
+	putText(737, 0, "BOMBS: " + bombsText + "    KEYS: " + keysText, 1);
 }
 
 // *GFX*
@@ -1425,6 +1476,10 @@ window.onload = function() {
 	loadFile("simple example.lev", true);
 	loadFile("filelist", false);
 
+	statusBarSdata = statusBarCtx.createImageData(statusBarBuffer.width, statusBarBuffer.height);
+	statusBarCtx.putImageData(statusBarSdata, 0, 0);
+	updateStatusBar();
+
 	document.addEventListener('keydown', indicateHeldDownKey);
 	document.addEventListener('keyup', indicateReleasedKey);
 	function indicateHeldDownKey(e) {
@@ -1469,6 +1524,7 @@ function play(delta)
 			gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 			if(!optionWindow) {
 				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+				gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
 			}
 			doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
 			mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
@@ -1533,12 +1589,12 @@ function play(delta)
 				indexOfSelection = 0;
 				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-				putText(860, 37, "LOAD LEVEL");
-				putText(0, 75, "USE UP & DOWN ARROW KEYS, ENTER TO SELECT. PRESS ESC TO CANCEL.");
+				putText(860, 37, "LOAD LEVEL", 0);
+				putText(0, 75, "USE UP & DOWN ARROW KEYS, ENTER TO SELECT. PRESS ESC TO CANCEL.", 0);
 				levelsInAlphabeticOrder = fileList;
 				levelsInAlphabeticOrder.sort();
 				for(var pos = 0; pos < levelsInAlphabeticOrder.length; pos++) {
-					putText(0, 113 + (pos * 19), levelsInAlphabeticOrder[pos].toUpperCase());
+					putText(0, 113 + (pos * 19), levelsInAlphabeticOrder[pos].toUpperCase(), 0);
 				}
 				storedBgBuffer2Ctx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 				drawSelection(indexOfSelection);
@@ -1555,8 +1611,8 @@ function play(delta)
 				numericInput = false;
 				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-				putText(813, 37, "SAVE YOUR LEVEL");
-				putText(0, 75, "ENTER FILENAME FOR YOUR THE MAZE LEVEL OR PRESS ESC TO CANCEL SAVING:");
+				putText(813, 37, "SAVE YOUR LEVEL", 0);
+				putText(0, 75, "ENTER FILENAME FOR YOUR THE MAZE LEVEL OR PRESS ESC TO CANCEL SAVING:", 0);
 				inputX = 0;
 				inputY = 94;
 				putUserInputText(inputX, inputY);
@@ -1633,8 +1689,8 @@ function play(delta)
 						currentGateOrButtonSettingsArrayPos = buttonDataPos;
 						bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 						// 2360 gates = 2360 bits = 295 bytes
-						putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON");
-						putText(940, 836, "OK");
+						putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON", 0);
+						putText(940, 836, "OK", 0);
 						for(var row = 0; row < 40; row++) {
 							for(var col = 0; col < 59; col++) {
 								if((gateOrButtonSettings[buttonDataPos] & bitValue) != 0) {
@@ -1662,8 +1718,8 @@ function play(delta)
 						currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
 						var gateId = gateOrButtonSettings[gameBoardPos * 295] + (gateOrButtonSettings[(gameBoardPos * 295) + 1] * 256);
 						userInput = "" + gateId;
-						putText(494, 56, "GATE ID:");
-						putText(494, 75, "PRESS ENTER TO CONFIRM.");
+						putText(494, 56, "GATE ID:", 0);
+						putText(494, 75, "PRESS ENTER TO CONFIRM.", 0);
 						inputX = 665;
 						inputY = 56;
 						putUserInputText(inputX, inputY);
@@ -1708,7 +1764,7 @@ function play(delta)
 									keyDown = false;
 									typedKeyCode = 0;
 									yesOrNoQuestion = true;
-									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)");
+									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)", 0);
 								}
 								else {
 									fileList[fileList.length] = enteredFilename;
