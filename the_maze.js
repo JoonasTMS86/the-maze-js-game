@@ -10,7 +10,7 @@ sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
 userInput, playerStartX, playerStartY, userInputMaxLength, inputX, inputY,
 enteredFilename, indexOfSelection, levelsInAlphabeticOrder, spriteAnimFrame,
 spriteAnimDelay, spriteAnimPos, coordsOfSpriteAnimFrames, coordsOfTilesToClear,
-animObjectType, levelTransitionDelay;
+animObjectType, levelTransitionDelay, questionAboutOverwritingSave;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -271,6 +271,7 @@ var keys                                     = 0; // Number of keys in player's 
  button).
 */
 var levelData                                = [];
+var storedData                               = [];
 var gateOrButtonSettings                     = [];
 var optionWindow                             = false;
 var enteringInput                            = false;
@@ -803,6 +804,8 @@ function clickGameScreen(event) {
 	var coords = getTileCoords(event.offsetX, event.offsetY);
 	if(!optionWindow) {
 		if(coords[0] < 100 && coords[1] < 47) {
+			var levelDataPos = (coords[1] * widthOfLevelInTiles) + coords[0];
+			storedData[levelDataPos] = currentlySelectedTile;
 			var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
 			for(var offset = 0; offset < 295; offset++) {
 				gateOrButtonSettings[dataPos + offset] = 0;
@@ -1067,6 +1070,7 @@ function loadFile(filename, isLevelFile) {
 			var propertiesPos = 2 + (widthOfLevelInTiles * heightOfLevelInTiles);
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
 				levelData[pos] = loaded_file_data[(pos + 2)];
+				storedData[pos] = loaded_file_data[(pos + 2)];
 				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
 					// Button properties.
 					var pPos = 295 * pos;
@@ -1650,7 +1654,20 @@ function play(delta)
 				enteringInput = false;
 				optionWindow = false;
 				yesOrNoQuestion = false;
-				saveLevel(enteredFilename);
+				if(questionAboutOverwritingSave) {
+					saveLevel(enteredFilename);
+				}
+				else {
+					bombs = 0;
+					keys = 0;
+					playerX = playerStartX;
+					playerY = playerStartY;
+					for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+						levelData[pos] = storedData[pos];
+					}
+					refreshScreen();
+					updateStatusBar();
+				}
 			}
 			if(keyDown && typedKeyCode == 78) {
 				keyDown = false;
@@ -1670,6 +1687,21 @@ function play(delta)
 					userInputEntered();
 				}
 			}
+
+			if(!enteringInput && typedKeyCode == 82) {
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				optionWindow = true;
+				enteringInput = false;
+				enteringIdValueForGate = false;
+				yesOrNoQuestion = true;
+				questionAboutOverwritingSave = false;
+				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				putText(651, 445, "RETRY LEVEL! ARE YOU SURE? (Y/N)", 0);
+			}
+
 			if(!enteringInput && typedKeyCode == 76) {
 				keyDown = false;
 				typedKeyCode = 0;
@@ -1856,6 +1888,7 @@ function play(delta)
 									keyDown = false;
 									typedKeyCode = 0;
 									yesOrNoQuestion = true;
+									questionAboutOverwritingSave = true;
 									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)", 0);
 								}
 								else {
