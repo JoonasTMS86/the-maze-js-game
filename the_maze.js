@@ -282,10 +282,9 @@ var fileList                                 = [];
 var animTimeElapsed                          = 0;
 var animFrame                                = 0;
 var animatingSprite                          = false;
-var ballsLeft                                = -1;
-var crateHoldersLeft                         = -1;
 var levelCompleteSequence                    = false;
 var levelCompletePhase                       = 0;
+var levelIsClear                             = false;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -567,28 +566,22 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	var posE = (y * widthOfLevelInTiles) + x + 1;
 	var posW = (y * widthOfLevelInTiles) + x - 1;
 	if((levelData[posN] & 0x1F) == objectId) {
-		ballsLeft--;
 		matches = true;
 		addAnimFrame(x, y - 1);
 	}
 	if((levelData[posS] & 0x1F) == objectId) {
-		ballsLeft--;
 		matches = true;
 		addAnimFrame(x, y + 1);
 	}
 	if((levelData[posE] & 0x1F) == objectId) {
-		ballsLeft--;
 		matches = true;
 		addAnimFrame(x + 1, y);
 	}
 	if((levelData[posW] & 0x1F) == objectId) {
-		ballsLeft--;
 		matches = true;
 		addAnimFrame(x - 1, y);
 	}
 	if(matches) {
-		ballsLeft--;
-		console.log("ballsLeft = " + ballsLeft);
 		animatingSprite = true;
 		animObjectType = 0;
 		addAnimFrame(x, y);
@@ -630,6 +623,27 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 			storedBgBuffer2Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
 			storedBgBuffer3Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
 			break;
+	}
+}
+
+function checkForExistenceOfBallsAndCrateholders() {
+	var found = false;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		if(
+			levelData[pos] == 1 ||
+			levelData[pos] == 2 ||
+			levelData[pos] == 3 ||
+			levelData[pos] == 4 ||
+			levelData[pos] == 5 ||
+			levelData[pos] == 6 ||
+			levelData[pos] == 10 ||
+			levelData[pos] == 0x88
+		) {
+			found = true;
+		}
+	}
+	if(!found) {
+		levelIsClear = true;
 	}
 }
 
@@ -689,7 +703,6 @@ function putTile(tile, x, y) {
 			storedBgBuffer3Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
 			break;
 		case 10:
-			crateHoldersLeft++;
 			bgInItsCurrentStateCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			storedBgBufferCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			storedBgBuffer2Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
@@ -774,6 +787,7 @@ function putTile(tile, x, y) {
 			storedBgBuffer3Ctx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
 			break;
 	}
+	checkForExistenceOfBallsAndCrateholders();
 }
 
 function getTileCoords(x, y) {
@@ -789,23 +803,9 @@ function clickGameScreen(event) {
 	var coords = getTileCoords(event.offsetX, event.offsetY);
 	if(!optionWindow) {
 		if(coords[0] < 100 && coords[1] < 47) {
-			var levelDataPos = (coords[1] * widthOfLevelInTiles) + coords[0];
 			var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
 			for(var offset = 0; offset < 295; offset++) {
 				gateOrButtonSettings[dataPos + offset] = 0;
-			}
-			if(currentlySelectedTile >= 1 && currentlySelectedTile <= 6 && 
-				(levelData[levelDataPos] & 0x1F) != 1 &&
-				(levelData[levelDataPos] & 0x1F) != 2 &&
-				(levelData[levelDataPos] & 0x1F) != 3 &&
-				(levelData[levelDataPos] & 0x1F) != 4 &&
-				(levelData[levelDataPos] & 0x1F) != 5 &&
-				(levelData[levelDataPos] & 0x1F) != 6
-			) {
-				console.log("(" + coords[1] + " * 100) + " + coords[0] + " = " + levelDataPos);
-				console.log("levelData[levelDataPos] & 0x1F = " + (levelData[levelDataPos] & 0x1F));
-				ballsLeft++;
-				console.log("added ball, ballsLeft = " + ballsLeft);
 			}
 			putTile(currentlySelectedTile, coords[0], coords[1]);
 		}
@@ -956,10 +956,6 @@ function canMove(x, y, direction) {
 			console.log("newX, newY, tileToPut = " + newX + ", " + newY + ", " + tileToPut);
 			putTile(tileUnderneath, x, y);
 			putTile(tileToPut, newX, newY);
-			if(tileToPut == 0x89) {
-				crateHoldersLeft--;
-				console.log("moved crate in place. crateHoldersLeft = " + crateHoldersLeft + ", ballsLeft = " + ballsLeft);
-			}
 		}
 		else if((levelData[checkPos] & 0x1F) == 7) {
 			bombs++;
@@ -1060,8 +1056,6 @@ function loadFile(filename, isLevelFile) {
 		if(isLevelFile) {
 			bombs = 0;
 			keys = 0;
-			ballsLeft = 0;
-			crateHoldersLeft = 0;
 			// Move data to our main buffer.
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 				gateOrButtonSettings[pos] = 0;
@@ -1073,9 +1067,6 @@ function loadFile(filename, isLevelFile) {
 			var propertiesPos = 2 + (widthOfLevelInTiles * heightOfLevelInTiles);
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
 				levelData[pos] = loaded_file_data[(pos + 2)];
-				if(levelData[pos] >= 1 && levelData[pos] <= 6) {
-					ballsLeft++;
-				}
 				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
 					// Button properties.
 					var pPos = 295 * pos;
@@ -1094,7 +1085,6 @@ function loadFile(filename, isLevelFile) {
 			}
 			refreshScreen();
 			updateStatusBar();
-			console.log("Level loaded, crateholders in level: " + crateHoldersLeft + " and balls in level: " + ballsLeft);
 		}
 		else {
 			fileList = [];
@@ -1584,8 +1574,6 @@ function play(delta)
 					case 1:
 						levelTransitionDelay++;
 						if(levelTransitionDelay >= 100) {
-							ballsLeft = -1;
-							crateHoldersLeft = -1;
 							levelCompleteSequence = false;
 							loadFile("simple example.lev", true);
 							updateStatusBar();
@@ -1594,14 +1582,14 @@ function play(delta)
 				}
 			}
 			else {
-				if(ballsLeft == 0 && crateHoldersLeft == 0) {
+				if(levelIsClear) {
+					levelIsClear = false;
 					levelCompleteSequence = true;
 					levelCompletePhase = 0;
 					wellX = 0;
 					wellY = -800;
 					doneX = 0;
 					doneY = fullSizeHeight + 800;
-					console.log("LEVEL COMPLETE");
 				}
 				if(!optionWindow && !enteringInput) {
 					animTimeElapsed++;
