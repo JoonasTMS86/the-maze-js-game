@@ -10,7 +10,7 @@ sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
 userInput, playerStartX, playerStartY, userInputMaxLength, inputX, inputY,
 enteredFilename, indexOfSelection, levelsInAlphabeticOrder, spriteAnimFrame,
 spriteAnimDelay, spriteAnimPos, coordsOfSpriteAnimFrames, coordsOfTilesToClear,
-animObjectType;
+animObjectType, levelTransitionDelay;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -249,6 +249,14 @@ var gfx_xplode9Buffer                        = document.getElementById("gfx_xplo
 var gfx_xplode9Ctx                           = gfx_xplode9Buffer.getContext("2d");
 var gfx_xplode9Sdata                         = gfx_xplode9Ctx.createImageData(19, 19);
 var gfx_xplode9Sprite                        = document.getElementById("gfx_xplode9");
+var gfx_wellBuffer                           = document.getElementById("gfx_wellBuffer");
+var gfx_wellCtx                              = gfx_wellBuffer.getContext("2d");
+var gfx_wellSdata                            = gfx_wellCtx.createImageData(1764, 426);
+var gfx_wellSprite                           = document.getElementById("gfx_well");
+var gfx_doneBuffer                           = document.getElementById("gfx_doneBuffer");
+var gfx_doneCtx                              = gfx_doneBuffer.getContext("2d");
+var gfx_doneSdata                            = gfx_doneCtx.createImageData(1764, 426);
+var gfx_doneSprite                           = document.getElementById("gfx_done");
 
 var playerX                                  = 0; // TILE X pos of player
 var playerY                                  = 0; // TILE Y pos of player
@@ -274,6 +282,10 @@ var fileList                                 = [];
 var animTimeElapsed                          = 0;
 var animFrame                                = 0;
 var animatingSprite                          = false;
+var ballsLeft                                = -1;
+var crateHoldersLeft                         = -1;
+var levelCompleteSequence                    = false;
+var levelCompletePhase                       = 0;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -555,22 +567,28 @@ function checkForOtherBallsOfTheSameColor(objectId, x, y) {
 	var posE = (y * widthOfLevelInTiles) + x + 1;
 	var posW = (y * widthOfLevelInTiles) + x - 1;
 	if((levelData[posN] & 0x1F) == objectId) {
+		ballsLeft--;
 		matches = true;
 		addAnimFrame(x, y - 1);
 	}
 	if((levelData[posS] & 0x1F) == objectId) {
+		ballsLeft--;
 		matches = true;
 		addAnimFrame(x, y + 1);
 	}
 	if((levelData[posE] & 0x1F) == objectId) {
+		ballsLeft--;
 		matches = true;
 		addAnimFrame(x + 1, y);
 	}
 	if((levelData[posW] & 0x1F) == objectId) {
+		ballsLeft--;
 		matches = true;
 		addAnimFrame(x - 1, y);
 	}
 	if(matches) {
+		ballsLeft--;
+		console.log("ballsLeft = " + ballsLeft);
 		animatingSprite = true;
 		animObjectType = 0;
 		addAnimFrame(x, y);
@@ -671,6 +689,7 @@ function putTile(tile, x, y) {
 			storedBgBuffer3Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
 			break;
 		case 10:
+			crateHoldersLeft++;
 			bgInItsCurrentStateCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			storedBgBufferCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			storedBgBuffer2Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
@@ -770,9 +789,23 @@ function clickGameScreen(event) {
 	var coords = getTileCoords(event.offsetX, event.offsetY);
 	if(!optionWindow) {
 		if(coords[0] < 100 && coords[1] < 47) {
+			var levelDataPos = (coords[1] * widthOfLevelInTiles) + coords[0];
 			var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
 			for(var offset = 0; offset < 295; offset++) {
 				gateOrButtonSettings[dataPos + offset] = 0;
+			}
+			if(currentlySelectedTile >= 1 && currentlySelectedTile <= 6 && 
+				(levelData[levelDataPos] & 0x1F) != 1 &&
+				(levelData[levelDataPos] & 0x1F) != 2 &&
+				(levelData[levelDataPos] & 0x1F) != 3 &&
+				(levelData[levelDataPos] & 0x1F) != 4 &&
+				(levelData[levelDataPos] & 0x1F) != 5 &&
+				(levelData[levelDataPos] & 0x1F) != 6
+			) {
+				console.log("(" + coords[1] + " * 100) + " + coords[0] + " = " + levelDataPos);
+				console.log("levelData[levelDataPos] & 0x1F = " + (levelData[levelDataPos] & 0x1F));
+				ballsLeft++;
+				console.log("added ball, ballsLeft = " + ballsLeft);
 			}
 			putTile(currentlySelectedTile, coords[0], coords[1]);
 		}
@@ -923,6 +956,10 @@ function canMove(x, y, direction) {
 			console.log("newX, newY, tileToPut = " + newX + ", " + newY + ", " + tileToPut);
 			putTile(tileUnderneath, x, y);
 			putTile(tileToPut, newX, newY);
+			if(tileToPut == 0x89) {
+				crateHoldersLeft--;
+				console.log("moved crate in place. crateHoldersLeft = " + crateHoldersLeft + ", ballsLeft = " + ballsLeft);
+			}
 		}
 		else if((levelData[checkPos] & 0x1F) == 7) {
 			bombs++;
@@ -1021,6 +1058,10 @@ function loadFile(filename, isLevelFile) {
 		var loaded_file_data = new Uint8Array(arraybuffer);
 
 		if(isLevelFile) {
+			bombs = 0;
+			keys = 0;
+			ballsLeft = 0;
+			crateHoldersLeft = 0;
 			// Move data to our main buffer.
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 				gateOrButtonSettings[pos] = 0;
@@ -1032,6 +1073,9 @@ function loadFile(filename, isLevelFile) {
 			var propertiesPos = 2 + (widthOfLevelInTiles * heightOfLevelInTiles);
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
 				levelData[pos] = loaded_file_data[(pos + 2)];
+				if(levelData[pos] >= 1 && levelData[pos] <= 6) {
+					ballsLeft++;
+				}
 				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
 					// Button properties.
 					var pPos = 295 * pos;
@@ -1049,6 +1093,8 @@ function loadFile(filename, isLevelFile) {
 				}
 			}
 			refreshScreen();
+			updateStatusBar();
+			console.log("Level loaded, crateholders in level: " + crateHoldersLeft + " and balls in level: " + ballsLeft);
 		}
 		else {
 			fileList = [];
@@ -1385,6 +1431,8 @@ window.onload = function() {
 	gfx_xplode7Ctx.drawImage(gfx_xplode7Sprite, 0, 0);
 	gfx_xplode8Ctx.drawImage(gfx_xplode8Sprite, 0, 0);
 	gfx_xplode9Ctx.drawImage(gfx_xplode9Sprite, 0, 0);
+	gfx_wellCtx.drawImage(gfx_wellSprite, 0, 0);
+	gfx_doneCtx.drawImage(gfx_doneSprite, 0, 0);
 
 	gfx_ball1Sdata = gfx_ball1Ctx.getImageData(0, 0, gfx_ball1Buffer.width, gfx_ball1Buffer.height);
 	gfx_ball2Sdata = gfx_ball2Ctx.getImageData(0, 0, gfx_ball2Buffer.width, gfx_ball2Buffer.height);
@@ -1423,6 +1471,8 @@ window.onload = function() {
 	gfx_xplode7Sdata = gfx_xplode7Ctx.getImageData(0, 0, gfx_xplode7Buffer.width, gfx_xplode7Buffer.height);
 	gfx_xplode8Sdata = gfx_xplode8Ctx.getImageData(0, 0, gfx_xplode8Buffer.width, gfx_xplode8Buffer.height);
 	gfx_xplode9Sdata = gfx_xplode9Ctx.getImageData(0, 0, gfx_xplode9Buffer.width, gfx_xplode9Buffer.height);
+	gfx_wellSdata = gfx_wellCtx.getImageData(0, 0, gfx_wellBuffer.width, gfx_wellBuffer.height);
+	gfx_doneSdata = gfx_doneCtx.getImageData(0, 0, gfx_doneBuffer.width, gfx_doneBuffer.height);
 	doSpriteTransparency(gfx_ball1Ctx, gfx_ball1Buffer, gfx_ball1Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball2Ctx, gfx_ball2Buffer, gfx_ball2Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball3Ctx, gfx_ball3Buffer, gfx_ball3Sdata, 255, 255, 255);
@@ -1460,6 +1510,8 @@ window.onload = function() {
 	doSpriteTransparency(gfx_xplode7Ctx, gfx_xplode7Buffer, gfx_xplode7Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_xplode8Ctx, gfx_xplode8Buffer, gfx_xplode8Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_xplode9Ctx, gfx_xplode9Buffer, gfx_xplode9Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_wellCtx, gfx_wellBuffer, gfx_wellSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_doneCtx, gfx_doneBuffer, gfx_doneSdata, 59, 59, 59);
 
 	gfx_fontCtx.drawImage(gfx_fontSprite, 0, 0);
 	gfx_fontSdata = gfx_fontCtx.getImageData(0, 0, gfx_fontBuffer.width, gfx_fontBuffer.height);
@@ -1473,12 +1525,10 @@ window.onload = function() {
 	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
 	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
-	loadFile("simple example.lev", true);
-	loadFile("filelist", false);
-
 	statusBarSdata = statusBarCtx.createImageData(statusBarBuffer.width, statusBarBuffer.height);
 	statusBarCtx.putImageData(statusBarSdata, 0, 0);
-	updateStatusBar();
+	loadFile("simple example.lev", true);
+	loadFile("filelist", false);
 
 	document.addEventListener('keydown', indicateHeldDownKey);
 	document.addEventListener('keyup', indicateReleasedKey);
@@ -1500,37 +1550,91 @@ function play(delta)
 			doSpriteAnimation();
 		}
 		else {
-			if(!optionWindow && !enteringInput) {
-				animTimeElapsed++;
-				if(animTimeElapsed >= 25) {
-					animTimeElapsed = 0;
-					animFrame++;
-					if(animFrame >= 3) {
-						animFrame = 0;
-					}
-					switch(animFrame) {
-						case 0:
-							bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
-							break;
-						case 1:
-							bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
-							break;
-						case 2:
-							bgInItsCurrentStateCtx.drawImage(storedBgBuffer3Buffer, 0, 0);
-							break;
-					}
+			if(levelCompleteSequence) {
+				switch(levelCompletePhase) {
+					case 0:
+						bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_wellBuffer, wellX, wellY);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_doneBuffer, doneX, doneY);
+						doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+						mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+						wellY += 6;
+						doneY -= 6;
+						if(doneY < -1000) {
+							levelCompletePhase = 1;
+							levelTransitionDelay = 0;
+							bgInItsCurrentStateSdata = bgInItsCurrentStateCtx.getImageData(0, 0, bgInItsCurrentStateBuffer.width, bgInItsCurrentStateBuffer.height);
+							var rowStride = bgInItsCurrentStateBuffer.width * 4;
+							for(var y = 0; y < bgInItsCurrentStateBuffer.height; y++) {
+								for(var x = 0; x < bgInItsCurrentStateBuffer.width; x++) {
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 0] = 0;
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 1] = 0;
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 2] = 0;
+								}
+							}
+							bgInItsCurrentStateCtx.putImageData(bgInItsCurrentStateSdata, 0, 0);
+							gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+							doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+							mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+						}
+						break;
+					case 1:
+						levelTransitionDelay++;
+						if(levelTransitionDelay >= 100) {
+							ballsLeft = -1;
+							crateHoldersLeft = -1;
+							levelCompleteSequence = false;
+							loadFile("simple example.lev", true);
+							updateStatusBar();
+						}
+						break;
 				}
 			}
-			gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-			if(!optionWindow) {
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
-				gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+			else {
+				if(ballsLeft == 0 && crateHoldersLeft == 0) {
+					levelCompleteSequence = true;
+					levelCompletePhase = 0;
+					wellX = 0;
+					wellY = -800;
+					doneX = 0;
+					doneY = fullSizeHeight + 800;
+					console.log("LEVEL COMPLETE");
+				}
+				if(!optionWindow && !enteringInput) {
+					animTimeElapsed++;
+					if(animTimeElapsed >= 25) {
+						animTimeElapsed = 0;
+						animFrame++;
+						if(animFrame >= 3) {
+							animFrame = 0;
+						}
+						switch(animFrame) {
+							case 0:
+								bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
+								break;
+							case 1:
+								bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
+								break;
+							case 2:
+								bgInItsCurrentStateCtx.drawImage(storedBgBuffer3Buffer, 0, 0);
+								break;
+						}
+					}
+				}
+				gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				if(!optionWindow) {
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+				}
+				doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+				mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 			}
-			doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
-			mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
 		}
 	}
-	if(!animatingSprite && !mustReleaseKey) {
+	if(!levelCompleteSequence && !animatingSprite && !mustReleaseKey) {
 
 		if(menuSelectionScreen) {
 			if(goingup && indexOfSelection > 0) {
