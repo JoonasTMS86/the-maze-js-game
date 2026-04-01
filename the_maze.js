@@ -1688,6 +1688,17 @@ function play(delta)
 				}
 			}
 
+			if(!enteringInput && typedKeyCode == 88) {
+				var tileCoords = getTileCoords(mouseX, mouseY);
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				playerStartX = tileCoords[0];
+				playerStartY = tileCoords[1];
+				playerX = playerStartX;
+				playerY = playerStartY;
+			}
+
 			if(!enteringInput && typedKeyCode == 82) {
 				keyDown = false;
 				typedKeyCode = 0;
