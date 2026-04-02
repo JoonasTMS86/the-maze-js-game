@@ -2,7 +2,7 @@
 
 https://joonaslindberg.fi/themaze
 
-<img width="1024" height="487" alt="image" src="https://github.com/user-attachments/assets/4d60334a-8117-4663-ada3-d0424ee20e46" />
+<img width="1024" height="487" alt="image" src="https://github.com/user-attachments/assets/ee72f201-2fc9-4fb4-8a7f-2aaecf236d07" />
 
 The Maze, a free and open source JavaScript puzzle game with a level editor by Joonas Lindberg.
 
