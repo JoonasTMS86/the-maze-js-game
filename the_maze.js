@@ -4,10 +4,13 @@ const tileWidth                              = 19;
 const tileHeight                             = 19;
 const widthOfLevelInTiles                    = 100;
 const heightOfLevelInTiles                   = 47;
+const sparkleAnim                            = [0, 1, 2, 3, 2, 1, 0];
 var deviceWidth, deviceHeight, mainGfxBufferSdata, doubleBufferSdata,
 sTileWidth, sTileHeight, mouseX, mouseY, currentGateOrButtonSettingsArrayPos,
 userInput, playerStartX, playerStartY, userInputMaxLength, inputX, inputY,
-enteredFilename, indexOfSelection, levelsInAlphabeticOrder;
+enteredFilename, indexOfSelection, levelsInAlphabeticOrder, spriteAnimFrame,
+spriteAnimDelay, spriteAnimPos, coordsOfSpriteAnimFrames, coordsOfTilesToClear,
+animObjectType, levelTransitionDelay, questionAboutOverwritingSave;
 var fullSizeWidth                            = 1910; // Width of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var fullSizeHeight                           = 909; // Height of screen when the game is played on a screen with 1920 x 1080 resolution capability.
 var typedKeyCode                             = 0;
@@ -51,11 +54,25 @@ var storedBgBufferSdata                      = storedBgBufferCtx.createImageData
 var storedBgBuffer2Buffer                    = document.getElementById("storedBgBuffer2Buffer");
 var storedBgBuffer2Ctx                       = storedBgBuffer2Buffer.getContext("2d");
 var storedBgBuffer2Sdata                     = storedBgBuffer2Ctx.createImageData(1910, 909);
+var storedBgBuffer3Buffer                    = document.getElementById("storedBgBuffer3Buffer");
+var storedBgBuffer3Ctx                       = storedBgBuffer3Buffer.getContext("2d");
+var storedBgBuffer3Sdata                     = storedBgBuffer3Ctx.createImageData(1910, 909);
+var statusBarBuffer                          = document.getElementById("statusBarBuffer");
+var statusBarCtx                             = statusBarBuffer.getContext("2d");
+var statusBarSdata                           = statusBarCtx.createImageData(1910, 19);
 var gfx_bgSprite                             = document.getElementById("gfx_bg");
 var gfx_lavaBuffer                           = document.getElementById("gfx_lavaBuffer");
 var gfx_lavaCtx                              = gfx_lavaBuffer.getContext("2d");
 var gfx_lavaSdata                            = gfx_lavaCtx.createImageData(19, 19);
 var gfx_lavaSprite                           = document.getElementById("gfx_lava");
+var gfx_lava2Buffer                          = document.getElementById("gfx_lava2Buffer");
+var gfx_lava2Ctx                             = gfx_lava2Buffer.getContext("2d");
+var gfx_lava2Sdata                           = gfx_lava2Ctx.createImageData(19, 19);
+var gfx_lava2Sprite                          = document.getElementById("gfx_lava2");
+var gfx_lava3Buffer                          = document.getElementById("gfx_lava3Buffer");
+var gfx_lava3Ctx                             = gfx_lava3Buffer.getContext("2d");
+var gfx_lava3Sdata                           = gfx_lava3Ctx.createImageData(19, 19);
+var gfx_lava3Sprite                          = document.getElementById("gfx_lava3");
 var gfx_ball1Buffer                          = document.getElementById("gfx_ball1Buffer");
 var gfx_ball1Ctx                             = gfx_ball1Buffer.getContext("2d");
 var gfx_ball1Sdata                           = gfx_ball1Ctx.createImageData(19, 19);
@@ -148,10 +165,26 @@ var gfx_gatehorizontalBuffer                 = document.getElementById("gfx_gate
 var gfx_gatehorizontalCtx                    = gfx_gatehorizontalBuffer.getContext("2d");
 var gfx_gatehorizontalSdata                  = gfx_gatehorizontalCtx.createImageData(19, 19);
 var gfx_gatehorizontalSprite                 = document.getElementById("gfx_gatehorizontal");
+var gfx_gatehorizontal2Buffer                = document.getElementById("gfx_gatehorizontal2Buffer");
+var gfx_gatehorizontal2Ctx                   = gfx_gatehorizontal2Buffer.getContext("2d");
+var gfx_gatehorizontal2Sdata                 = gfx_gatehorizontal2Ctx.createImageData(19, 19);
+var gfx_gatehorizontal2Sprite                = document.getElementById("gfx_gatehorizontal2");
+var gfx_gatehorizontal3Buffer                = document.getElementById("gfx_gatehorizontal3Buffer");
+var gfx_gatehorizontal3Ctx                   = gfx_gatehorizontal3Buffer.getContext("2d");
+var gfx_gatehorizontal3Sdata                 = gfx_gatehorizontal3Ctx.createImageData(19, 19);
+var gfx_gatehorizontal3Sprite                = document.getElementById("gfx_gatehorizontal3");
 var gfx_gateverticalBuffer                   = document.getElementById("gfx_gateverticalBuffer");
 var gfx_gateverticalCtx                      = gfx_gateverticalBuffer.getContext("2d");
 var gfx_gateverticalSdata                    = gfx_gateverticalCtx.createImageData(19, 19);
 var gfx_gateverticalSprite                   = document.getElementById("gfx_gatevertical");
+var gfx_gatevertical2Buffer                  = document.getElementById("gfx_gatevertical2Buffer");
+var gfx_gatevertical2Ctx                     = gfx_gatevertical2Buffer.getContext("2d");
+var gfx_gatevertical2Sdata                   = gfx_gatevertical2Ctx.createImageData(19, 19);
+var gfx_gatevertical2Sprite                  = document.getElementById("gfx_gatevertical2");
+var gfx_gatevertical3Buffer                  = document.getElementById("gfx_gatevertical3Buffer");
+var gfx_gatevertical3Ctx                     = gfx_gatevertical3Buffer.getContext("2d");
+var gfx_gatevertical3Sdata                   = gfx_gatevertical3Ctx.createImageData(19, 19);
+var gfx_gatevertical3Sprite                  = document.getElementById("gfx_gatevertical3");
 var gfx_inactivegatehorizontalBuffer         = document.getElementById("gfx_inactivegatehorizontalBuffer");
 var gfx_inactivegatehorizontalCtx            = gfx_inactivegatehorizontalBuffer.getContext("2d");
 var gfx_inactivegatehorizontalSdata          = gfx_inactivegatehorizontalCtx.createImageData(19, 19);
@@ -164,6 +197,67 @@ var gfx_cursorBuffer                         = document.getElementById("gfx_curs
 var gfx_cursorCtx                            = gfx_cursorBuffer.getContext("2d");
 var gfx_cursorSdata                          = gfx_cursorCtx.createImageData(19, 19);
 var gfx_cursorSprite                         = document.getElementById("gfx_cursor");
+var gfx_sparkle1Buffer                       = document.getElementById("gfx_sparkle1Buffer");
+var gfx_sparkle1Ctx                          = gfx_sparkle1Buffer.getContext("2d");
+var gfx_sparkle1Sdata                        = gfx_sparkle1Ctx.createImageData(19, 19);
+var gfx_sparkle1Sprite                       = document.getElementById("gfx_sparkle1");
+var gfx_sparkle2Buffer                       = document.getElementById("gfx_sparkle2Buffer");
+var gfx_sparkle2Ctx                          = gfx_sparkle2Buffer.getContext("2d");
+var gfx_sparkle2Sdata                        = gfx_sparkle2Ctx.createImageData(19, 19);
+var gfx_sparkle2Sprite                       = document.getElementById("gfx_sparkle2");
+var gfx_sparkle3Buffer                       = document.getElementById("gfx_sparkle3Buffer");
+var gfx_sparkle3Ctx                          = gfx_sparkle3Buffer.getContext("2d");
+var gfx_sparkle3Sdata                        = gfx_sparkle3Ctx.createImageData(19, 19);
+var gfx_sparkle3Sprite                       = document.getElementById("gfx_sparkle3");
+var gfx_sparkle4Buffer                       = document.getElementById("gfx_sparkle4Buffer");
+var gfx_sparkle4Ctx                          = gfx_sparkle4Buffer.getContext("2d");
+var gfx_sparkle4Sdata                        = gfx_sparkle4Ctx.createImageData(19, 19);
+var gfx_sparkle4Sprite                       = document.getElementById("gfx_sparkle4");
+var gfx_xplode1Buffer                        = document.getElementById("gfx_xplode1Buffer");
+var gfx_xplode1Ctx                           = gfx_xplode1Buffer.getContext("2d");
+var gfx_xplode1Sdata                         = gfx_xplode1Ctx.createImageData(19, 19);
+var gfx_xplode1Sprite                        = document.getElementById("gfx_xplode1");
+var gfx_xplode2Buffer                        = document.getElementById("gfx_xplode2Buffer");
+var gfx_xplode2Ctx                           = gfx_xplode2Buffer.getContext("2d");
+var gfx_xplode2Sdata                         = gfx_xplode2Ctx.createImageData(19, 19);
+var gfx_xplode2Sprite                        = document.getElementById("gfx_xplode2");
+var gfx_xplode3Buffer                        = document.getElementById("gfx_xplode3Buffer");
+var gfx_xplode3Ctx                           = gfx_xplode3Buffer.getContext("2d");
+var gfx_xplode3Sdata                         = gfx_xplode3Ctx.createImageData(19, 19);
+var gfx_xplode3Sprite                        = document.getElementById("gfx_xplode3");
+var gfx_xplode4Buffer                        = document.getElementById("gfx_xplode4Buffer");
+var gfx_xplode4Ctx                           = gfx_xplode4Buffer.getContext("2d");
+var gfx_xplode4Sdata                         = gfx_xplode4Ctx.createImageData(19, 19);
+var gfx_xplode4Sprite                        = document.getElementById("gfx_xplode4");
+var gfx_xplode5Buffer                        = document.getElementById("gfx_xplode5Buffer");
+var gfx_xplode5Ctx                           = gfx_xplode5Buffer.getContext("2d");
+var gfx_xplode5Sdata                         = gfx_xplode5Ctx.createImageData(19, 19);
+var gfx_xplode5Sprite                        = document.getElementById("gfx_xplode5");
+var gfx_xplode6Buffer                        = document.getElementById("gfx_xplode6Buffer");
+var gfx_xplode6Ctx                           = gfx_xplode6Buffer.getContext("2d");
+var gfx_xplode6Sdata                         = gfx_xplode6Ctx.createImageData(19, 19);
+var gfx_xplode6Sprite                        = document.getElementById("gfx_xplode6");
+var gfx_xplode7Buffer                        = document.getElementById("gfx_xplode7Buffer");
+var gfx_xplode7Ctx                           = gfx_xplode7Buffer.getContext("2d");
+var gfx_xplode7Sdata                         = gfx_xplode7Ctx.createImageData(19, 19);
+var gfx_xplode7Sprite                        = document.getElementById("gfx_xplode7");
+var gfx_xplode8Buffer                        = document.getElementById("gfx_xplode8Buffer");
+var gfx_xplode8Ctx                           = gfx_xplode8Buffer.getContext("2d");
+var gfx_xplode8Sdata                         = gfx_xplode8Ctx.createImageData(19, 19);
+var gfx_xplode8Sprite                        = document.getElementById("gfx_xplode8");
+var gfx_xplode9Buffer                        = document.getElementById("gfx_xplode9Buffer");
+var gfx_xplode9Ctx                           = gfx_xplode9Buffer.getContext("2d");
+var gfx_xplode9Sdata                         = gfx_xplode9Ctx.createImageData(19, 19);
+var gfx_xplode9Sprite                        = document.getElementById("gfx_xplode9");
+var gfx_wellBuffer                           = document.getElementById("gfx_wellBuffer");
+var gfx_wellCtx                              = gfx_wellBuffer.getContext("2d");
+var gfx_wellSdata                            = gfx_wellCtx.createImageData(1764, 426);
+var gfx_wellSprite                           = document.getElementById("gfx_well");
+var gfx_doneBuffer                           = document.getElementById("gfx_doneBuffer");
+var gfx_doneCtx                              = gfx_doneBuffer.getContext("2d");
+var gfx_doneSdata                            = gfx_doneCtx.createImageData(1764, 426);
+var gfx_doneSprite                           = document.getElementById("gfx_done");
+
 var playerX                                  = 0; // TILE X pos of player
 var playerY                                  = 0; // TILE Y pos of player
 var currentlySelectedTile                    = 1;
@@ -177,6 +271,7 @@ var keys                                     = 0; // Number of keys in player's 
  button).
 */
 var levelData                                = [];
+var storedData                               = [];
 var gateOrButtonSettings                     = [];
 var optionWindow                             = false;
 var enteringInput                            = false;
@@ -185,6 +280,12 @@ var numericInput                             = false; // This must be set to "tr
 var yesOrNoQuestion                          = false;
 var menuSelectionScreen                      = false;
 var fileList                                 = [];
+var animTimeElapsed                          = 0;
+var animFrame                                = 0;
+var animatingSprite                          = false;
+var levelCompleteSequence                    = false;
+var levelCompletePhase                       = 0;
+var levelIsClear                             = false;
 
 let Application = PIXI.Application,
 	Container = PIXI.Container,
@@ -444,72 +545,127 @@ function doSpriteTransparency(givenbufferctx, givenbuffer, givenpic, keyR, keyG,
 	givenbufferctx.putImageData(givenpic, 0, 0);
 }
 
+function addAnimFrame(x, y) {
+	coordsOfSpriteAnimFrames[coordsOfSpriteAnimFrames.length] = x * tileWidth;
+	coordsOfSpriteAnimFrames[coordsOfSpriteAnimFrames.length] = y * tileHeight;
+	coordsOfTilesToClear[coordsOfTilesToClear.length] = x;
+	coordsOfTilesToClear[coordsOfTilesToClear.length] = y;
+}
+
+// *GFX*
 function checkForOtherBallsOfTheSameColor(objectId, x, y) {
+	coordsOfSpriteAnimFrames = [];
+	coordsOfTilesToClear = [];
+	spriteAnimFrame = 0;
+	spriteAnimDelay = 0;
+	spriteAnimPos = 0;
+
 	var matches = false;
 	var origPos = (y * widthOfLevelInTiles) + x;
 	var posN = ((y - 1) * widthOfLevelInTiles) + x;
 	var posS = ((y + 1) * widthOfLevelInTiles) + x;
 	var posE = (y * widthOfLevelInTiles) + x + 1;
 	var posW = (y * widthOfLevelInTiles) + x - 1;
-	if(levelData[posN] == objectId) {
+	if((levelData[posN] & 0x1F) == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y - 1) * 19, 19, 19, x * 19, (y - 1) * 19, 19, 19);
-		levelData[posN] = 0;
+		addAnimFrame(x, y - 1);
 	}
-	if(levelData[posS] == objectId) {
+	if((levelData[posS] & 0x1F) == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, (y + 1) * 19, 19, 19, x * 19, (y + 1) * 19, 19, 19);
-		levelData[posS] = 0;
+		addAnimFrame(x, y + 1);
 	}
-	if(levelData[posE] == objectId) {
+	if((levelData[posE] & 0x1F) == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x + 1) * 19, y * 19, 19, 19, (x + 1) * 19, y * 19, 19, 19);
-		levelData[posE] = 0;
+		addAnimFrame(x + 1, y);
 	}
-	if(levelData[posW] == objectId) {
+	if((levelData[posW] & 0x1F) == objectId) {
 		matches = true;
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, (x - 1) * 19, y * 19, 19, 19, (x - 1) * 19, y * 19, 19, 19);
-		levelData[posW] = 0;
+		addAnimFrame(x - 1, y);
 	}
 	if(matches) {
-		bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
-		levelData[origPos] = 0;
+		animatingSprite = true;
+		animObjectType = 0;
+		addAnimFrame(x, y);
 	}
-	else {
-		switch(objectId) {
-			case 1:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
-				break;
-			case 2:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
-				break;
-			case 3:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
-				break;
-			case 4:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
-				break;
-			case 5:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
-				break;
-			case 6:
-				bgInItsCurrentStateCtx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
-				break;
-		}
+	switch(objectId) {
+		case 1:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball1Buffer, x * 19, y * 19);
+			break;
+		case 2:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball2Buffer, x * 19, y * 19);
+			break;
+		case 3:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball3Buffer, x * 19, y * 19);
+			break;
+		case 4:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball4Buffer, x * 19, y * 19);
+			break;
+		case 5:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball5Buffer, x * 19, y * 19);
+			break;
+		case 6:
+			bgInItsCurrentStateCtx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_ball6Buffer, x * 19, y * 19);
+			break;
 	}
 }
 
+function checkForExistenceOfBallsAndCrateholders() {
+	var found = false;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		if(
+			levelData[pos] == 1 ||
+			levelData[pos] == 2 ||
+			levelData[pos] == 3 ||
+			levelData[pos] == 4 ||
+			levelData[pos] == 5 ||
+			levelData[pos] == 6 ||
+			levelData[pos] == 10 ||
+			levelData[pos] == 0x88
+		) {
+			found = true;
+		}
+	}
+	if(!found) {
+		levelIsClear = true;
+	}
+}
+
+// *GFX*
 function putTile(tile, x, y) {
 	var gameBoardPos = (y * widthOfLevelInTiles) + x;
 	levelData[gameBoardPos] = tile;
 
-	tile &= 0x7F;
+	tile &= 0x1F;
 
 	// First, remove any possible tile that might be at that position of the screen.
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+	storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
 	switch(tile) {
 		case 0:
 			bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBufferCtx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBuffer2Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
+			storedBgBuffer3Ctx.drawImage(gfx_bgSprite, x * 19, y * 19, 19, 19, x * 19, y * 19, 19, 19);
 			break;
 		case 1:
 			checkForOtherBallsOfTheSameColor(1, x, y);
@@ -531,56 +687,108 @@ function putTile(tile, x, y) {
 			break;
 		case 7:
 			bgInItsCurrentStateCtx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_bombBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_bombBuffer, x * 19, y * 19);
 			break;
 		case 8:
 			bgInItsCurrentStateCtx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_boulderBuffer, x * 19, y * 19);
 			break;
 		case 9:
 			bgInItsCurrentStateCtx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_crateBuffer, x * 19, y * 19);
 			break;
 		case 10:
 			bgInItsCurrentStateCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_crateholderBuffer, x * 19, y * 19);
 			break;
 		case 11:
 			bgInItsCurrentStateCtx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_keyBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_keyBuffer, x * 19, y * 19);
 			break;
 		case 12:
 			bgInItsCurrentStateCtx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_lockBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_lockBuffer, x * 19, y * 19);
 			break;
 		case 13:
 			bgInItsCurrentStateCtx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_fragilewallBuffer, x * 19, y * 19);
 			break;
 		case 14:
 			bgInItsCurrentStateCtx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_wallBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_wallBuffer, x * 19, y * 19);
 			break;
 		case 15:
 			bgInItsCurrentStateCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_lavaBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_lava2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_lava3Buffer, x * 19, y * 19);
 			break;
 		case 16:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonNBuffer, x * 19, y * 19);
 			break;
 		case 17:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonSBuffer, x * 19, y * 19);
 			break;
 		case 18:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonEBuffer, x * 19, y * 19);
 			break;
 		case 19:
 			bgInItsCurrentStateCtx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_buttonWBuffer, x * 19, y * 19);
 			break;
 		case 20:
 			bgInItsCurrentStateCtx.drawImage(gfx_gatehorizontalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_gatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_gatehorizontal2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_gatehorizontal3Buffer, x * 19, y * 19);
 			break;
 		case 21:
 			bgInItsCurrentStateCtx.drawImage(gfx_gateverticalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_gateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_gatevertical2Buffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_gatevertical3Buffer, x * 19, y * 19);
 			break;
 		case 22:
 			bgInItsCurrentStateCtx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_inactivegatehorizontalBuffer, x * 19, y * 19);
 			break;
 		case 23:
 			bgInItsCurrentStateCtx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBufferCtx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer2Ctx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
+			storedBgBuffer3Ctx.drawImage(gfx_inactivegateverticalBuffer, x * 19, y * 19);
 			break;
 	}
+	checkForExistenceOfBallsAndCrateholders();
 }
 
 function getTileCoords(x, y) {
@@ -595,11 +803,15 @@ function getTileCoords(x, y) {
 function clickGameScreen(event) {
 	var coords = getTileCoords(event.offsetX, event.offsetY);
 	if(!optionWindow) {
-		var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
-		for(var offset = 0; offset < 295; offset++) {
-			gateOrButtonSettings[dataPos + offset] = 0;
+		if(coords[0] < 100 && coords[1] < 47) {
+			var levelDataPos = (coords[1] * widthOfLevelInTiles) + coords[0];
+			storedData[levelDataPos] = currentlySelectedTile;
+			var dataPos = ((coords[1] * widthOfLevelInTiles) + coords[0]) * 295;
+			for(var offset = 0; offset < 295; offset++) {
+				gateOrButtonSettings[dataPos + offset] = 0;
+			}
+			putTile(currentlySelectedTile, coords[0], coords[1]);
 		}
-		putTile(currentlySelectedTile, coords[0], coords[1]);
 	}
 	else {
 		// Mouse click handler when an option window of some sort is on the screen.
@@ -627,10 +839,17 @@ function moveMouse(event) {
 	mouseY = event.offsetY;
 }
 
-function putText(textX, textY, text) {
+function putText(textX, textY, text, target) {
 	for(var pos = 0; pos < text.length; pos++) {
 		var letter = text.charCodeAt(pos) - 32;
-		bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+		switch(target) {
+			case 0:
+				bgInItsCurrentStateCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+				break;
+			case 1:
+				statusBarCtx.drawImage(gfx_fontBuffer, (letter * 19), 0, letterWidth, letterHeight, textX, textY, letterWidth, letterHeight);
+				break;
+		}
 		textX += letterWidth;
 	}
 }
@@ -687,35 +906,53 @@ function canMove(x, y, direction) {
 	}
 	var checkPos = (y * widthOfLevelInTiles) + x;
 	console.log("bumped into object id " + levelData[checkPos] + " at " + x + "," + y);
-	if((levelData[checkPos] & 0x7F) < 12) {
+	if((levelData[checkPos] & 0x1F) < 12 || (levelData[checkPos] & 0x1F) == 22 || (levelData[checkPos] & 0x1F) == 23) {
 		var tileUnderneath = 0;
 		if((levelData[checkPos] & 0x80) != 0) {
 			tileUnderneath = 10;
 		}
+		if((levelData[checkPos] & 0x40) != 0) {
+			tileUnderneath = 22;
+		}
+		if((levelData[checkPos] & 0x20) != 0) {
+			tileUnderneath = 23;
+		}
 		// IDs of movable objects: 1,2,3,4,5,6,8,9
 		// Add 128 to the value if the object in question has a crate holder underneath it.
 		if(
-			(levelData[checkPos] & 0x7F) == 1 ||
-			(levelData[checkPos] & 0x7F) == 2 ||
-			(levelData[checkPos] & 0x7F) == 3 ||
-			(levelData[checkPos] & 0x7F) == 4 ||
-			(levelData[checkPos] & 0x7F) == 5 ||
-			(levelData[checkPos] & 0x7F) == 6 ||
-			(levelData[checkPos] & 0x7F) == 8 ||
-			(levelData[checkPos] & 0x7F) == 9
+			(levelData[checkPos] & 0x1F) == 1 ||
+			(levelData[checkPos] & 0x1F) == 2 ||
+			(levelData[checkPos] & 0x1F) == 3 ||
+			(levelData[checkPos] & 0x1F) == 4 ||
+			(levelData[checkPos] & 0x1F) == 5 ||
+			(levelData[checkPos] & 0x1F) == 6 ||
+			(levelData[checkPos] & 0x1F) == 8 ||
+			(levelData[checkPos] & 0x1F) == 9
 		) {
-			if((levelData[checkPos] & 0x7F) == 8 && levelData[newPosOfMovableObject] == 15) {
+			if((levelData[checkPos] & 0x1F) == 8 && levelData[newPosOfMovableObject] == 15) {
 				console.log("boulder dropped into lava");
 			}
-			else if(levelData[newPosOfMovableObject] != 0 && levelData[newPosOfMovableObject] != 10) {
+			else if(
+				levelData[newPosOfMovableObject] != 0 &&
+				levelData[newPosOfMovableObject] != 10 &&
+				levelData[newPosOfMovableObject] != 22 &&
+				levelData[newPosOfMovableObject] != 23
+			) {
 				return false;
 			}
 			var markerUnderneath = 0x0;
-			if(levelData[newPosOfMovableObject] == 10) {
-				console.log("YES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-				markerUnderneath = 0x80;
+			switch(levelData[newPosOfMovableObject]) {
+				case 10:
+					markerUnderneath = 0x80;
+					break;
+				case 22:
+					markerUnderneath = 0x40;
+					break;
+				case 23:
+					markerUnderneath = 0x20;
+					break;
 			}
-			var tileToPut = (levelData[checkPos] & 0x7F) | markerUnderneath;
+			var tileToPut = (levelData[checkPos] & 0x1F) | markerUnderneath;
 			if(levelData[newPosOfMovableObject] == 15) {
 				tileToPut = 0;
 			}
@@ -723,38 +960,51 @@ function canMove(x, y, direction) {
 			putTile(tileUnderneath, x, y);
 			putTile(tileToPut, newX, newY);
 		}
-		else if((levelData[checkPos] & 0x7F) == 7) {
+		else if((levelData[checkPos] & 0x1F) == 7) {
 			bombs++;
+			updateStatusBar();
 			console.log("bomb");
 			putTile(0, x, y);
 		}
-		else if((levelData[checkPos] & 0x7F) == 11) {
+		else if((levelData[checkPos] & 0x1F) == 11) {
 			keys++;
+			updateStatusBar();
 			console.log("key");
 			putTile(0, x, y);
 		}
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 12 && keys > 0) {
+	else if((levelData[checkPos] & 0x1F) == 12 && keys > 0) {
 		keys--;
+		updateStatusBar();
 		console.log("lock unlocked");
 		putTile(0, x, y);
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 13 && bombs > 0) {
+	else if((levelData[checkPos] & 0x1F) == 13 && bombs > 0) {
+		// Animate the wall that blows up.
+		coordsOfSpriteAnimFrames = [];
+		coordsOfTilesToClear = [];
+		spriteAnimFrame = 0;
+		spriteAnimDelay = 0;
+		spriteAnimPos = 0;
+		animatingSprite = true;
+		animObjectType = 1;
+		addAnimFrame(x, y);
 		bombs--;
+		updateStatusBar();
 		console.log("fragile wall blown up");
 		putTile(0, x, y);
 	}
-	else if((levelData[checkPos] & 0x7F) >= 16 && (levelData[checkPos] & 0x7F) <= 19) {
+	else if((levelData[checkPos] & 0x1F) >= 16 && (levelData[checkPos] & 0x1F) <= 19) {
 		console.log("** PUSHED BUTTON AT X,Y POS " + x + "," + y + " **");
 		currentGateOrButtonSettingsArrayPos = ((y * widthOfLevelInTiles) + x) * 295;
 		toggleGates(currentGateOrButtonSettingsArrayPos);
 	}
-	else if((levelData[checkPos] & 0x7F) == 22) {
+	else if((levelData[checkPos] & 0x1F) == 22) {
 		return true;
 	}
-	else if((levelData[checkPos] & 0x7F) == 23) {
+	else if((levelData[checkPos] & 0x1F) == 23) {
 		return true;
 	}
 	return false;
@@ -778,7 +1028,7 @@ function putUserInputText(textX, textY) {
 		bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, textX + (pos * 19), textY, 19, 19, textX + (pos * 19), textY, 19, 19);
 	}
 	var cursorX = textX + (userInput.length * letterWidth);
-	putText(textX, textY, userInput);
+	putText(textX, textY, userInput, 0);
 	bgInItsCurrentStateCtx.drawImage(gfx_cursorBuffer, cursorX, textY);
 }
 
@@ -807,6 +1057,8 @@ function loadFile(filename, isLevelFile) {
 		var loaded_file_data = new Uint8Array(arraybuffer);
 
 		if(isLevelFile) {
+			bombs = 0;
+			keys = 0;
 			// Move data to our main buffer.
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles * 295); pos++) {
 				gateOrButtonSettings[pos] = 0;
@@ -818,6 +1070,7 @@ function loadFile(filename, isLevelFile) {
 			var propertiesPos = 2 + (widthOfLevelInTiles * heightOfLevelInTiles);
 			for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
 				levelData[pos] = loaded_file_data[(pos + 2)];
+				storedData[pos] = loaded_file_data[(pos + 2)];
 				if(levelData[pos] >= 16 && levelData[pos] <= 19) {
 					// Button properties.
 					var pPos = 295 * pos;
@@ -835,6 +1088,7 @@ function loadFile(filename, isLevelFile) {
 				}
 			}
 			refreshScreen();
+			updateStatusBar();
 		}
 		else {
 			fileList = [];
@@ -955,6 +1209,159 @@ function drawSelection(index) {
 	bgInItsCurrentStateCtx.putImageData(bgInItsCurrentStateSdata, 0, 0);
 }
 
+function doSpriteAnimation() {
+	gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+	gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+	gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+	for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
+		if(animObjectType == 0) {
+			switch(spriteAnimFrame) {
+				case 0:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle1Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 1:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle2Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 2:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle3Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 3:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_sparkle4Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+			}
+		}
+		else {
+			switch(spriteAnimFrame) {
+				case 0:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode1Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 1:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode2Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 2:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode3Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 3:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode4Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 4:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode5Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 5:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode6Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 6:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode7Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 7:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode8Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+				case 8:
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_xplode9Buffer, coordsOfSpriteAnimFrames[pos + 0], coordsOfSpriteAnimFrames[pos + 1]);
+					break;
+			}
+		}
+	}
+	doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+	mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+	var nextFrame = false;
+	spriteAnimDelay++;
+	switch(animObjectType) {
+		case 0:
+			if(spriteAnimDelay >= 6) {
+				nextFrame = true;
+			}
+			break;
+		case 1:
+			if(spriteAnimDelay >= 4) {
+				nextFrame = true;
+			}
+			break;
+	}
+	if(nextFrame) {
+		spriteAnimDelay = 0;
+		if(animObjectType == 0) {
+			spriteAnimPos++;
+			if(spriteAnimPos == 4) {
+				for(var pos = 0; pos < coordsOfSpriteAnimFrames.length; pos += 2) {
+					var tilePos = (coordsOfTilesToClear[pos + 1] * widthOfLevelInTiles) + coordsOfTilesToClear[pos + 0];
+					if((levelData[tilePos] & 0x80) != 0 ) {
+						putTile(10, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else if((levelData[tilePos] & 0x40) != 0 ) {
+						putTile(22, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else if((levelData[tilePos] & 0x20) != 0 ) {
+						putTile(23, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+					else {
+						putTile(0, coordsOfTilesToClear[pos + 0], coordsOfTilesToClear[pos + 1]);
+					}
+				}
+			}
+			if(spriteAnimPos >= sparkleAnim.length) {
+				animatingSprite = false;
+			}
+			else {
+				spriteAnimFrame = sparkleAnim[spriteAnimPos];
+			}
+		}
+		else {
+			spriteAnimFrame++;
+			if(spriteAnimFrame >= 9) {
+				animatingSprite = false;
+			}
+		}
+	}
+}
+
+function updateStatusBar() {
+	statusBarSdata = statusBarCtx.getImageData(0, 0, statusBarBuffer.width, statusBarBuffer.height);
+	var rowStride = statusBarBuffer.width * 4;
+	for(var y = 0; y < 19; y++) {
+		for(var x = 0; x < statusBarBuffer.width; x++) {
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 0] = 0;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 1] = 64;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 2] = 64;
+			statusBarSdata.data[(y * rowStride) + (x * 4) + 3] = 255;
+		}
+	}
+	statusBarCtx.putImageData(statusBarSdata, 0, 0);
+	var bombsText, keysText;
+	if(bombs < 10) {
+		bombsText = "00" + bombs;
+	}
+	else if(bombs < 100) {
+		bombsText = "0" + bombs;
+	}
+	else {
+		bombsText = bombs;
+	}
+	if(keys < 10) {
+		keysText = "00" + keys;
+	}
+	else if(keys < 100) {
+		keysText = "0" + keys;
+	}
+	else {
+		keysText = keys;
+	}
+	putText(737, 0, "BOMBS: " + bombsText + "    KEYS: " + keysText, 1);
+}
+
+function resetLevel() {
+	bombs = 0;
+	keys = 0;
+	playerX = playerStartX;
+	playerY = playerStartY;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		levelData[pos] = storedData[pos];
+	}
+	refreshScreen();
+	updateStatusBar();
+}
+
+// *GFX*
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
 	screen_width  = window.screen.availWidth;
@@ -985,6 +1392,8 @@ window.onload = function() {
 	doubleBufferSdata = doubleBufferCtx.getImageData(0, 0, doubleBuffer.width, doubleBuffer.height);
 
 	gfx_lavaCtx.drawImage(gfx_lavaSprite, 0, 0);
+	gfx_lava2Ctx.drawImage(gfx_lava2Sprite, 0, 0);
+	gfx_lava3Ctx.drawImage(gfx_lava3Sprite, 0, 0);
 	gfx_protagonistCtx.drawImage(gfx_protagonistSprite, 0, 0);
 	gfx_ball1Ctx.drawImage(gfx_ball1Sprite, 0, 0);
 	gfx_ball2Ctx.drawImage(gfx_ball2Sprite, 0, 0);
@@ -1007,10 +1416,29 @@ window.onload = function() {
 	gfx_buttonECtx.drawImage(gfx_buttonESprite, 0, 0);
 	gfx_buttonWCtx.drawImage(gfx_buttonWSprite, 0, 0);
 	gfx_gatehorizontalCtx.drawImage(gfx_gatehorizontalSprite, 0, 0);
+	gfx_gatehorizontal2Ctx.drawImage(gfx_gatehorizontal2Sprite, 0, 0);
+	gfx_gatehorizontal3Ctx.drawImage(gfx_gatehorizontal3Sprite, 0, 0);
 	gfx_gateverticalCtx.drawImage(gfx_gateverticalSprite, 0, 0);
+	gfx_gatevertical2Ctx.drawImage(gfx_gatevertical2Sprite, 0, 0);
+	gfx_gatevertical3Ctx.drawImage(gfx_gatevertical3Sprite, 0, 0);
 	gfx_inactivegatehorizontalCtx.drawImage(gfx_inactivegatehorizontalSprite, 0, 0);
 	gfx_inactivegateverticalCtx.drawImage(gfx_inactivegateverticalSprite, 0, 0);
 	gfx_cursorCtx.drawImage(gfx_cursorSprite, 0, 0);
+	gfx_sparkle1Ctx.drawImage(gfx_sparkle1Sprite, 0, 0);
+	gfx_sparkle2Ctx.drawImage(gfx_sparkle2Sprite, 0, 0);
+	gfx_sparkle3Ctx.drawImage(gfx_sparkle3Sprite, 0, 0);
+	gfx_sparkle4Ctx.drawImage(gfx_sparkle4Sprite, 0, 0);
+	gfx_xplode1Ctx.drawImage(gfx_xplode1Sprite, 0, 0);
+	gfx_xplode2Ctx.drawImage(gfx_xplode2Sprite, 0, 0);
+	gfx_xplode3Ctx.drawImage(gfx_xplode3Sprite, 0, 0);
+	gfx_xplode4Ctx.drawImage(gfx_xplode4Sprite, 0, 0);
+	gfx_xplode5Ctx.drawImage(gfx_xplode5Sprite, 0, 0);
+	gfx_xplode6Ctx.drawImage(gfx_xplode6Sprite, 0, 0);
+	gfx_xplode7Ctx.drawImage(gfx_xplode7Sprite, 0, 0);
+	gfx_xplode8Ctx.drawImage(gfx_xplode8Sprite, 0, 0);
+	gfx_xplode9Ctx.drawImage(gfx_xplode9Sprite, 0, 0);
+	gfx_wellCtx.drawImage(gfx_wellSprite, 0, 0);
+	gfx_doneCtx.drawImage(gfx_doneSprite, 0, 0);
 
 	gfx_ball1Sdata = gfx_ball1Ctx.getImageData(0, 0, gfx_ball1Buffer.width, gfx_ball1Buffer.height);
 	gfx_ball2Sdata = gfx_ball2Ctx.getImageData(0, 0, gfx_ball2Buffer.width, gfx_ball2Buffer.height);
@@ -1029,9 +1457,28 @@ window.onload = function() {
 	gfx_buttonESdata = gfx_buttonECtx.getImageData(0, 0, gfx_buttonEBuffer.width, gfx_buttonEBuffer.height);
 	gfx_buttonWSdata = gfx_buttonWCtx.getImageData(0, 0, gfx_buttonWBuffer.width, gfx_buttonWBuffer.height);
 	gfx_gatehorizontalSdata = gfx_gatehorizontalCtx.getImageData(0, 0, gfx_gatehorizontalBuffer.width, gfx_gatehorizontalBuffer.height);
+	gfx_gatehorizontal2Sdata = gfx_gatehorizontal2Ctx.getImageData(0, 0, gfx_gatehorizontal2Buffer.width, gfx_gatehorizontal2Buffer.height);
+	gfx_gatehorizontal3Sdata = gfx_gatehorizontal3Ctx.getImageData(0, 0, gfx_gatehorizontal3Buffer.width, gfx_gatehorizontal3Buffer.height);
 	gfx_gateverticalSdata = gfx_gateverticalCtx.getImageData(0, 0, gfx_gateverticalBuffer.width, gfx_gateverticalBuffer.height);
+	gfx_gatevertical2Sdata = gfx_gatevertical2Ctx.getImageData(0, 0, gfx_gatevertical2Buffer.width, gfx_gatevertical2Buffer.height);
+	gfx_gatevertical3Sdata = gfx_gatevertical3Ctx.getImageData(0, 0, gfx_gatevertical3Buffer.width, gfx_gatevertical3Buffer.height);
 	gfx_inactivegatehorizontalSdata = gfx_inactivegatehorizontalCtx.getImageData(0, 0, gfx_inactivegatehorizontalBuffer.width, gfx_inactivegatehorizontalBuffer.height);
 	gfx_inactivegateverticalSdata = gfx_inactivegateverticalCtx.getImageData(0, 0, gfx_inactivegateverticalBuffer.width, gfx_inactivegateverticalBuffer.height);
+	gfx_sparkle1Sdata = gfx_sparkle1Ctx.getImageData(0, 0, gfx_sparkle1Buffer.width, gfx_sparkle1Buffer.height);
+	gfx_sparkle2Sdata = gfx_sparkle2Ctx.getImageData(0, 0, gfx_sparkle2Buffer.width, gfx_sparkle2Buffer.height);
+	gfx_sparkle3Sdata = gfx_sparkle3Ctx.getImageData(0, 0, gfx_sparkle3Buffer.width, gfx_sparkle3Buffer.height);
+	gfx_sparkle4Sdata = gfx_sparkle4Ctx.getImageData(0, 0, gfx_sparkle4Buffer.width, gfx_sparkle4Buffer.height);
+	gfx_xplode1Sdata = gfx_xplode1Ctx.getImageData(0, 0, gfx_xplode1Buffer.width, gfx_xplode1Buffer.height);
+	gfx_xplode2Sdata = gfx_xplode2Ctx.getImageData(0, 0, gfx_xplode2Buffer.width, gfx_xplode2Buffer.height);
+	gfx_xplode3Sdata = gfx_xplode3Ctx.getImageData(0, 0, gfx_xplode3Buffer.width, gfx_xplode3Buffer.height);
+	gfx_xplode4Sdata = gfx_xplode4Ctx.getImageData(0, 0, gfx_xplode4Buffer.width, gfx_xplode4Buffer.height);
+	gfx_xplode5Sdata = gfx_xplode5Ctx.getImageData(0, 0, gfx_xplode5Buffer.width, gfx_xplode5Buffer.height);
+	gfx_xplode6Sdata = gfx_xplode6Ctx.getImageData(0, 0, gfx_xplode6Buffer.width, gfx_xplode6Buffer.height);
+	gfx_xplode7Sdata = gfx_xplode7Ctx.getImageData(0, 0, gfx_xplode7Buffer.width, gfx_xplode7Buffer.height);
+	gfx_xplode8Sdata = gfx_xplode8Ctx.getImageData(0, 0, gfx_xplode8Buffer.width, gfx_xplode8Buffer.height);
+	gfx_xplode9Sdata = gfx_xplode9Ctx.getImageData(0, 0, gfx_xplode9Buffer.width, gfx_xplode9Buffer.height);
+	gfx_wellSdata = gfx_wellCtx.getImageData(0, 0, gfx_wellBuffer.width, gfx_wellBuffer.height);
+	gfx_doneSdata = gfx_doneCtx.getImageData(0, 0, gfx_doneBuffer.width, gfx_doneBuffer.height);
 	doSpriteTransparency(gfx_ball1Ctx, gfx_ball1Buffer, gfx_ball1Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball2Ctx, gfx_ball2Buffer, gfx_ball2Sdata, 255, 255, 255);
 	doSpriteTransparency(gfx_ball3Ctx, gfx_ball3Buffer, gfx_ball3Sdata, 255, 255, 255);
@@ -1049,19 +1496,43 @@ window.onload = function() {
 	doSpriteTransparency(gfx_buttonECtx, gfx_buttonEBuffer, gfx_buttonESdata, 59, 59, 59);
 	doSpriteTransparency(gfx_buttonWCtx, gfx_buttonWBuffer, gfx_buttonWSdata, 59, 59, 59);
 	doSpriteTransparency(gfx_gatehorizontalCtx, gfx_gatehorizontalBuffer, gfx_gatehorizontalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatehorizontal2Ctx, gfx_gatehorizontal2Buffer, gfx_gatehorizontal2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatehorizontal3Ctx, gfx_gatehorizontal3Buffer, gfx_gatehorizontal3Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_gateverticalCtx, gfx_gateverticalBuffer, gfx_gateverticalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatevertical2Ctx, gfx_gatevertical2Buffer, gfx_gatevertical2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_gatevertical3Ctx, gfx_gatevertical3Buffer, gfx_gatevertical3Sdata, 59, 59, 59);
 	doSpriteTransparency(gfx_inactivegatehorizontalCtx, gfx_inactivegatehorizontalBuffer, gfx_inactivegatehorizontalSdata, 59, 59, 59);
 	doSpriteTransparency(gfx_inactivegateverticalCtx, gfx_inactivegateverticalBuffer, gfx_inactivegateverticalSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_sparkle1Ctx, gfx_sparkle1Buffer, gfx_sparkle1Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_sparkle2Ctx, gfx_sparkle2Buffer, gfx_sparkle2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_sparkle3Ctx, gfx_sparkle3Buffer, gfx_sparkle3Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_sparkle4Ctx, gfx_sparkle4Buffer, gfx_sparkle4Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode1Ctx, gfx_xplode1Buffer, gfx_xplode1Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode2Ctx, gfx_xplode2Buffer, gfx_xplode2Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode3Ctx, gfx_xplode3Buffer, gfx_xplode3Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode4Ctx, gfx_xplode4Buffer, gfx_xplode4Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode5Ctx, gfx_xplode5Buffer, gfx_xplode5Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode6Ctx, gfx_xplode6Buffer, gfx_xplode6Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode7Ctx, gfx_xplode7Buffer, gfx_xplode7Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode8Ctx, gfx_xplode8Buffer, gfx_xplode8Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_xplode9Ctx, gfx_xplode9Buffer, gfx_xplode9Sdata, 59, 59, 59);
+	doSpriteTransparency(gfx_wellCtx, gfx_wellBuffer, gfx_wellSdata, 59, 59, 59);
+	doSpriteTransparency(gfx_doneCtx, gfx_doneBuffer, gfx_doneSdata, 59, 59, 59);
 
 	gfx_fontCtx.drawImage(gfx_fontSprite, 0, 0);
 	gfx_fontSdata = gfx_fontCtx.getImageData(0, 0, gfx_fontBuffer.width, gfx_fontBuffer.height);
 	doSpriteTransparency(gfx_fontCtx, gfx_fontBuffer, gfx_fontSdata, 146, 41, 0); // 0x92 0x29 0x00
 
 	bgInItsCurrentStateCtx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBufferCtx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBuffer2Ctx.drawImage(gfx_bgSprite, 0, 0);
+	storedBgBuffer3Ctx.drawImage(gfx_bgSprite, 0, 0);
 
 	sTileWidth = Math.floor(deviceWidth / widthOfLevelInTiles);
 	sTileHeight = Math.floor(deviceHeight / heightOfLevelInTiles);
 	console.log("sTileWidth, sTileHeight = " + sTileWidth + ", " + sTileHeight);
+	statusBarSdata = statusBarCtx.createImageData(statusBarBuffer.width, statusBarBuffer.height);
+	statusBarCtx.putImageData(statusBarSdata, 0, 0);
 	loadFile("simple example.lev", true);
 	loadFile("filelist", false);
 
@@ -1077,18 +1548,96 @@ window.onload = function() {
 	}
 };
 
+// *GFX*
 function play(delta)
 {
 	if(doubleBufferSdata != null) {
-		gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-		if(!optionWindow) {
-			gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+		if(animatingSprite) {
+			doSpriteAnimation();
 		}
-		doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
-		mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+		else {
+			if(levelCompleteSequence) {
+				switch(levelCompletePhase) {
+					case 0:
+						bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_wellBuffer, wellX, wellY);
+						gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_doneBuffer, doneX, doneY);
+						doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+						mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+						wellY += 6;
+						doneY -= 6;
+						if(doneY < -1000) {
+							levelCompletePhase = 1;
+							levelTransitionDelay = 0;
+							bgInItsCurrentStateSdata = bgInItsCurrentStateCtx.getImageData(0, 0, bgInItsCurrentStateBuffer.width, bgInItsCurrentStateBuffer.height);
+							var rowStride = bgInItsCurrentStateBuffer.width * 4;
+							for(var y = 0; y < bgInItsCurrentStateBuffer.height; y++) {
+								for(var x = 0; x < bgInItsCurrentStateBuffer.width; x++) {
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 0] = 0;
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 1] = 0;
+									bgInItsCurrentStateSdata.data[(y * rowStride) + (x * 4) + 2] = 0;
+								}
+							}
+							bgInItsCurrentStateCtx.putImageData(bgInItsCurrentStateSdata, 0, 0);
+							gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+							doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+							mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+						}
+						break;
+					case 1:
+						levelTransitionDelay++;
+						if(levelTransitionDelay >= 100) {
+							levelCompleteSequence = false;
+							resetLevel();
+						}
+						break;
+				}
+			}
+			else {
+				if(levelIsClear) {
+					levelIsClear = false;
+					levelCompleteSequence = true;
+					levelCompletePhase = 0;
+					wellX = 0;
+					wellY = -800;
+					doneX = 0;
+					doneY = fullSizeHeight + 800;
+				}
+				if(!optionWindow && !enteringInput) {
+					animTimeElapsed++;
+					if(animTimeElapsed >= 25) {
+						animTimeElapsed = 0;
+						animFrame++;
+						if(animFrame >= 3) {
+							animFrame = 0;
+						}
+						switch(animFrame) {
+							case 0:
+								bgInItsCurrentStateCtx.drawImage(storedBgBufferBuffer, 0, 0);
+								break;
+							case 1:
+								bgInItsCurrentStateCtx.drawImage(storedBgBuffer2Buffer, 0, 0);
+								break;
+							case 2:
+								bgInItsCurrentStateCtx.drawImage(storedBgBuffer3Buffer, 0, 0);
+								break;
+						}
+					}
+				}
+				gfxScaledToCurrentDeviceResolutionCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				if(!optionWindow) {
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+					gfxScaledToCurrentDeviceResolutionCtx.drawImage(statusBarBuffer, 0, fullSizeHeight - 19);
+				}
+				doubleBufferCtx.drawImage(gfxScaledToCurrentDeviceResolutionBuffer, 0, 0, deviceWidth, deviceHeight);
+				mainGfxBufferCtx.drawImage(doubleBuffer, 0, 0);
+			}
+		}
 	}
-	if(!mustReleaseKey) {
-
+	if(!levelCompleteSequence && !animatingSprite && !mustReleaseKey) {
 
 		if(menuSelectionScreen) {
 			if(goingup && indexOfSelection > 0) {
@@ -1116,7 +1665,12 @@ function play(delta)
 				enteringInput = false;
 				optionWindow = false;
 				yesOrNoQuestion = false;
-				saveLevel(enteredFilename);
+				if(questionAboutOverwritingSave) {
+					saveLevel(enteredFilename);
+				}
+				else {
+					resetLevel();
+				}
 			}
 			if(keyDown && typedKeyCode == 78) {
 				keyDown = false;
@@ -1136,6 +1690,32 @@ function play(delta)
 					userInputEntered();
 				}
 			}
+
+			if(!enteringInput && typedKeyCode == 88) {
+				var tileCoords = getTileCoords(mouseX, mouseY);
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				playerStartX = tileCoords[0];
+				playerStartY = tileCoords[1];
+				playerX = playerStartX;
+				playerY = playerStartY;
+			}
+
+			if(!enteringInput && typedKeyCode == 82) {
+				keyDown = false;
+				typedKeyCode = 0;
+				mustReleaseKey = true;
+				optionWindow = true;
+				enteringInput = false;
+				enteringIdValueForGate = false;
+				yesOrNoQuestion = true;
+				questionAboutOverwritingSave = false;
+				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
+				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
+				putText(651, 445, "RETRY LEVEL! ARE YOU SURE? (Y/N)", 0);
+			}
+
 			if(!enteringInput && typedKeyCode == 76) {
 				keyDown = false;
 				typedKeyCode = 0;
@@ -1147,12 +1727,12 @@ function play(delta)
 				indexOfSelection = 0;
 				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-				putText(860, 37, "LOAD LEVEL");
-				putText(0, 75, "USE UP & DOWN ARROW KEYS, ENTER TO SELECT. PRESS ESC TO CANCEL.");
+				putText(860, 37, "LOAD LEVEL", 0);
+				putText(0, 75, "USE UP & DOWN ARROW KEYS, ENTER TO SELECT. PRESS ESC TO CANCEL.", 0);
 				levelsInAlphabeticOrder = fileList;
 				levelsInAlphabeticOrder.sort();
 				for(var pos = 0; pos < levelsInAlphabeticOrder.length; pos++) {
-					putText(0, 113 + (pos * 19), levelsInAlphabeticOrder[pos].toUpperCase());
+					putText(0, 113 + (pos * 19), levelsInAlphabeticOrder[pos].toUpperCase(), 0);
 				}
 				storedBgBuffer2Ctx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
 				drawSelection(indexOfSelection);
@@ -1169,8 +1749,8 @@ function play(delta)
 				numericInput = false;
 				bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 				storedBgBufferCtx.drawImage(bgInItsCurrentStateBuffer, 0, 0);
-				putText(813, 37, "SAVE YOUR LEVEL");
-				putText(0, 75, "ENTER FILENAME FOR YOUR THE MAZE LEVEL OR PRESS ESC TO CANCEL SAVING:");
+				putText(813, 37, "SAVE YOUR LEVEL", 0);
+				putText(0, 75, "ENTER FILENAME FOR YOUR THE MAZE LEVEL OR PRESS ESC TO CANCEL SAVING:", 0);
 				inputX = 0;
 				inputY = 94;
 				putUserInputText(inputX, inputY);
@@ -1247,8 +1827,8 @@ function play(delta)
 						currentGateOrButtonSettingsArrayPos = buttonDataPos;
 						bgInItsCurrentStateCtx.drawImage(gfx_protagonistBuffer, playerX * tileWidth, playerY * tileHeight);
 						// 2360 gates = 2360 bits = 295 bytes
-						putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON");
-						putText(940, 836, "OK");
+						putText(494, 56, "CHOOSE WHICH GATE IDS ARE AFFECTED BY THIS BUTTON", 0);
+						putText(940, 836, "OK", 0);
 						for(var row = 0; row < 40; row++) {
 							for(var col = 0; col < 59; col++) {
 								if((gateOrButtonSettings[buttonDataPos] & bitValue) != 0) {
@@ -1276,8 +1856,8 @@ function play(delta)
 						currentGateOrButtonSettingsArrayPos = gameBoardPos * 295;
 						var gateId = gateOrButtonSettings[gameBoardPos * 295] + (gateOrButtonSettings[(gameBoardPos * 295) + 1] * 256);
 						userInput = "" + gateId;
-						putText(494, 56, "GATE ID:");
-						putText(494, 75, "PRESS ENTER TO CONFIRM.");
+						putText(494, 56, "GATE ID:", 0);
+						putText(494, 75, "PRESS ENTER TO CONFIRM.", 0);
 						inputX = 665;
 						inputY = 56;
 						putUserInputText(inputX, inputY);
@@ -1322,7 +1902,8 @@ function play(delta)
 									keyDown = false;
 									typedKeyCode = 0;
 									yesOrNoQuestion = true;
-									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)");
+									questionAboutOverwritingSave = true;
+									putText(0, 132, "FILE ALREADY EXISTS. OVERWRITE? (Y / N)", 0);
 								}
 								else {
 									fileList[fileList.length] = enteredFilename;
@@ -1342,13 +1923,6 @@ function play(delta)
 				}
 			}
 		}
-
-
-
-
-
-
-
 
 		if(!optionWindow) {
 			if(zPressed) {
