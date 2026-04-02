@@ -1349,6 +1349,18 @@ function updateStatusBar() {
 	putText(737, 0, "BOMBS: " + bombsText + "    KEYS: " + keysText, 1);
 }
 
+function resetLevel() {
+	bombs = 0;
+	keys = 0;
+	playerX = playerStartX;
+	playerY = playerStartY;
+	for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
+		levelData[pos] = storedData[pos];
+	}
+	refreshScreen();
+	updateStatusBar();
+}
+
 // *GFX*
 window.onload = function() {
 	// Detect the resolution of the user's device in order to scale images correctly.
@@ -1579,8 +1591,7 @@ function play(delta)
 						levelTransitionDelay++;
 						if(levelTransitionDelay >= 100) {
 							levelCompleteSequence = false;
-							loadFile("simple example.lev", true);
-							updateStatusBar();
+							resetLevel();
 						}
 						break;
 				}
@@ -1658,15 +1669,7 @@ function play(delta)
 					saveLevel(enteredFilename);
 				}
 				else {
-					bombs = 0;
-					keys = 0;
-					playerX = playerStartX;
-					playerY = playerStartY;
-					for(var pos = 0; pos < (widthOfLevelInTiles * heightOfLevelInTiles); pos++) {
-						levelData[pos] = storedData[pos];
-					}
-					refreshScreen();
-					updateStatusBar();
+					resetLevel();
 				}
 			}
 			if(keyDown && typedKeyCode == 78) {
