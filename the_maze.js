@@ -1691,7 +1691,7 @@ function play(delta)
 				}
 			}
 
-			if(!enteringInput && typedKeyCode == 88) {
+			if(!enteringInput && typedKeyCode == 67) {
 				var tileCoords = getTileCoords(mouseX, mouseY);
 				keyDown = false;
 				typedKeyCode = 0;
