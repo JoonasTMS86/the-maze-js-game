@@ -35,6 +35,8 @@ To select the previous tile, press the Z key.
 
 To select the next tile, press the X key.
 
+To set the player starting position to particular tile, move mouse cursor over that tile and press the C key.
+
 To load a user made level, press the L key - press Esc to cancel.
 
 To save your level, press the S key - press Esc to cancel.
